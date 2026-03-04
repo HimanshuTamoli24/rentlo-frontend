@@ -17,21 +17,22 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Link } from "react-router";
 
 const menuItems = [
   {
     title: "Dashboard",
-    href: "#",
+    href: "/",
     icon: House,
   },
   {
     title: "Users",
-    href: "#",
+    href: "/users",
     icon: UserRound,
   },
   {
     title: "Visits",
-    href: "#",
+    href: "/visits",
     icon: CalendarClock,
   },
 ];
@@ -43,10 +44,10 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="md:justify-center">
-              <a href="#">
+              <Link to="/">
                 <Building2 className="size-4" />
                 <span className="md:hidden">Rentlo</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -63,10 +64,10 @@ export function AppSidebar() {
                   tooltip={item.title}
                   className="md:justify-center"
                 >
-                  <a href={item.href}>
+                  <Link to={item.href}>
                     <item.icon />
                     <span className="md:hidden">{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -81,10 +82,10 @@ export function AppSidebar() {
               asChild
               className="md:justify-center text-red-500 hover:text-red-600"
             >
-              <a href="#">
+              <Link to="/">
                 <LogOut />
                 <span className="md:hidden">Logout</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
