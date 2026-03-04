@@ -6,10 +6,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "./components/ui/sidebar";
-import { Navigate, Outlet, Route, Routes } from "react-router";
-import UserPage from "./module/user/pages/user";
-import UserDetailPage from "./module/user/pages/user-detail";
-import NotFoundPage from "./module/list/pages/not-found";
+import { Outlet, Route, Routes } from "react-router";
+import User from "./module/user/pages/user";
+import UserDetail from "./module/user/pages/user-detail";
+import ListPage from "./module/list/pages/list";
+import NotFoundPage from "./components/not-found";
+import CreateList from "./module/list/pages/create-list";
 
 function AppLayout() {
   return (
@@ -28,12 +30,13 @@ function AppLayout() {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/users" replace />} />
       <Route path="/auth" element={<AuthPage />} />
 
       <Route element={<AppLayout />}>
-        <Route path="/users" element={<UserPage />} />
-        <Route path="/users/:id" element={<UserDetailPage />} />
+        <Route path="/" element={<ListPage />} />
+        <Route path="/users" element={<User />} />
+        <Route path="/users/:id" element={<UserDetail />} />
+        <Route path="/listings/create" element={<CreateList />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

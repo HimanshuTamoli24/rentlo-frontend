@@ -1,7 +1,7 @@
 import {
   Building2,
   CalendarClock,
-  House,
+  List,
   LogOut,
   UserRound,
 } from "lucide-react";
@@ -17,13 +17,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Lists",
     href: "/",
-    icon: House,
+    icon: List,
   },
   {
     title: "Users",
@@ -38,6 +38,7 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
+  const location =  useLocation();
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -58,11 +59,11 @@ export function AppSidebar() {
           <SidebarGroupLabel className="md:hidden">Main Menu</SidebarGroupLabel>
           <SidebarMenu>
             {menuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem  className="flex gap-0.5" key={item.title}>
                 <SidebarMenuButton
                   asChild
                   tooltip={item.title}
-                  className="md:justify-center"
+                  className={`${location.pathname === item.href ? "bg-primary  hover:bg-primary/90" : ""} md:justify-center`}
                 >
                   <Link to={item.href}>
                     <item.icon />
