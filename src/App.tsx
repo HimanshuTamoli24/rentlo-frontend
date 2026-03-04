@@ -1,16 +1,26 @@
-
-import './App.css'
-import { useUsers } from './module/user/hooks/use-hook'
-import AuthPage from './module/auth/pages/auth'
+import "./App.css";
+import AuthPage from "./module/auth/pages/auth";
+import { AppSidebar } from "./components/custom/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "./components/ui/sidebar";
 
 function App() {
-  const { data: users } = useUsers();
-  console.log(users);
   return (
-    <>
-    <AuthPage/>
-    </>
-  )
+    <SidebarProvider open={false}>
+      <AppSidebar />
+      <SidebarInset>
+        {/* <header className="flex h-14 items-center border-b px-4"> */}
+          <SidebarTrigger className="md:hidden" />
+        {/* </header> */}
+        <div className="a">
+          <AuthPage />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }
 
-export default App
+export default App;

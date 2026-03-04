@@ -1,8 +1,20 @@
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRegister } from "../../../hooks/use-auth";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -11,8 +23,9 @@ const formSchema = z.object({
 });
 
 export default function Register() {
-  const mutation = useRegister();
-  const { mutateAsync: registerFn, isLoading } = mutation;
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { mutateAsync: registerFn, isPending } = useRegister();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -20,73 +33,97 @@ export default function Register() {
   });
 
   const onSubmit = async (data: any) => {
-    try {
-      await toast.promise(registerFn(data), {
-        loading: "Registering...",
-        success: "Registration successful!",
-        error: "Registration failed. Please try again.",
-      });
-    } catch (e) {
-      // handled by toast
-    }
+    await toast.promise(registerFn(data), {
+      loading: "Registering...",
+      success: () => {
+        navigate("/");
+        return "Registration successful!";
+      },
+      error: "Registration failed. Please try again.",
+    });
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <h2 className="text-xl font-semibold">Create account</h2>
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Your full name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-      <div>
-        <label className="block text-sm">Name</label>
-        <input
-          {...form.register("name")}
-          className="mt-1 block w-full border px-2 py-1"
-        />
-        {form.formState.errors.name && (
-          <p className="text-sm text-red-600">
-            {String(form.formState.errors.name.message)}
-          </p>
-        )}
-      </div>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="you@example.com"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-      <div>
-        <label className="block text-sm">Email</label>
-        <input
-          {...form.register("email")}
-          type="email"
-          className="mt-1 block w-full border px-2 py-1"
-          placeholder="you@example.com"
-        />
-        {form.formState.errors.email && (
-          <p className="text-sm text-red-600">
-            {String(form.formState.errors.email.message)}
-          </p>
-        )}
-      </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel required>Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter password"
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-      <div>
-        <label className="block text-sm">Password</label>
-        <input
-          {...form.register("password")}
-          type="password"
-          className="mt-1 block w-full border px-2 py-1"
-          placeholder="••••••••"
-        />
-        {form.formState.errors.password && (
-          <p className="text-sm text-red-600">
-            {String(form.formState.errors.password.message)}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 bg-green-600 text-white rounded"
-        >
-          {isLoading ? "Creating..." : "Create account"}
-        </button>
-      </div>
-    </form>
+        <div>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="px-4 py-2 bg-primary text-white rounded disabled:opacity-60"
+          >
+            {isPending ? "Creating..." : "Create account"}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 }
