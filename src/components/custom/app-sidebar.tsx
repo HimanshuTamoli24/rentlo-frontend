@@ -30,7 +30,13 @@ const ALL_MENU_ITEMS = [
     title: "My Listings",
     href: "/owner", // Assuming an owner dashboard will be here
     icon: List,
-    roles: ["OWNER", "ADMIN"],
+    roles: ["OWNER", "ADMIN", "BIGBOSS"],
+  },
+  {
+    title: "Create List",
+    href: "/listings/create",
+    icon: Building2, // Re-using Building2 or we could use Plus
+    roles: ["OWNER", "ADMIN", "BIGBOSS"],
   },
   {
     title: "Users",

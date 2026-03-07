@@ -33,8 +33,8 @@ export default function ProtectedRoutes({
     const normalizedUserRole = userRole.toUpperCase();
 
     if (!normalizedRoles.includes(normalizedUserRole)) {
-      // Redirect to unauthorized or back home
-      return <Navigate to="/" replace />;
+      // Redirect to unauthorized
+      return <Navigate to="/unauthorized" replace />;
     }
   }
 

@@ -28,11 +28,14 @@ function AppLayout() {
   );
 }
 
+import UnauthorizedPage from "./components/unauthorized-page";
+
 function App() {
   return (
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={<ListPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* Authenticated routes */}
       <Route element={<ProtectedRoutes />}>
