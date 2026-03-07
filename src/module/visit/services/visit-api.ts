@@ -24,6 +24,15 @@ export const createVisitApi = () => ({
     return data;
   },
 
+  getIncomingVisits: async (params?: {
+    page?: number;
+    limit?: number;
+    enabled?: boolean;
+  }) => {
+    const { data } = await axiosInstance.get(`/visits`, { params });
+    return data;
+  },
+
   markAsVisited: async (visitId: string) => {
     const { data } = await axiosInstance.patch(`/visits/${visitId}/visited`);
     return data;
@@ -34,6 +43,30 @@ export const createVisitApi = () => ({
       `/visits/${visitId}/decision`,
       payload,
     );
+    return data;
+  },
+
+  updateVisitStatus: async (
+    visitId: string,
+    status: string,
+    notes?: string,
+  ) => {
+    const { data } = await axiosInstance.patch(`/visits/${visitId}/status`, {
+      status,
+      notes,
+    });
+    return data;
+  },
+
+  scheduleVisit: async (
+    visitId: string,
+    scheduledDate: string,
+    notes?: string,
+  ) => {
+    const { data } = await axiosInstance.patch(`/visits/${visitId}/schedule`, {
+      scheduledDate,
+      notes,
+    });
     return data;
   },
 });
