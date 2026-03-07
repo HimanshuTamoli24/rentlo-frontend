@@ -178,7 +178,7 @@ export default function AdminListPage() {
                         </TableCell>
                         <TableCell>{getStatusBadge(listing.status)}</TableCell>
                         <TableCell className="text-right">
-                          {listing.status === "REVIEW" && (
+                          {listing.status === "DRAFT" && (
                             <div className="flex justify-end gap-2">
                               <Button
                                 size="sm"

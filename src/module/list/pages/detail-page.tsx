@@ -1,0 +1,220 @@
+import { useParams, useNavigate } from "react-router";
+import { useList } from "../hooks/list-hook";
+import LoadingPage from "@/components/loading";
+import ErrorPage from "@/components/error-page";
+import TopNav from "./component/top-nav";
+import { Button } from "@/components/ui/button";
+import {
+  CalendarDays,
+  MapPin,
+  Check,
+  FileWarning,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+import { format } from "date-fns";
+import { useState } from "react";
+import { useRequestVisit } from "../../visit/hooks/visit-hook";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function ListDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data, isLoading, isError } = useList(id || "");
+  const { mutateAsync: requestVisit, isPending } = useRequestVisit();
+
+  const [visitModal, setVisitModal] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  if (isLoading) return <LoadingPage />;
+  if (isError || !data?.data) return <ErrorPage />;
+
+  const listing = data.data;
+
+  // Simple hardcoded user/role check so we don't crash and user sees Auth screen if not logged in
+  const isLoggedIn = !!localStorage.getItem("user");
+
+  const handleRequestVisit = async () => {
+    if (!isLoggedIn) {
+      navigate("/auth");
+      return;
+    }
+
+    await requestVisit({
+      listingId: listing._id || listing.id,
+      notes,
+    });
+
+    setVisitModal(false);
+    setNotes("");
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background font-sans">
+      <TopNav />
+      <main className="flex-1 px-4 py-8 md:px-8 max-w-[1200px] mx-auto w-full">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-6 -ml-4 hover:bg-transparent text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to listings
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main Visual Content */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="aspect-video w-full rounded-3xl overflow-hidden bg-muted relative">
+              <img
+                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2000"
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2 mb-2 text-primary font-medium">
+                <MapPin className="h-4 w-4" />
+                <span>{listing.location}</span>
+                {listing.status === "PUBLISHED" && (
+                  <span className="ml-auto bg-green-100 text-green-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">
+                    Published
+                  </span>
+                )}
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight mb-4">
+                {listing.title}
+              </h1>
+
+              <p className="text-muted-foreground leading-relaxed text-lg">
+                {listing.description ||
+                  "A beautiful property available for rent. Come discover modern amenities and comfortable living spaces designed for your lifestyle."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t">
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Amenities</h3>
+                <ul className="space-y-3">
+                  {listing.amenities?.length ? (
+                    listing.amenities.map((amenity: string, i: number) => (
+                      <li
+                        key={i}
+                        className="flex items-center gap-2 text-muted-foreground"
+                      >
+                        <Check className="h-5 w-5 text-green-500 shrink-0" />
+                        <span>{amenity}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground italic">
+                      None specified
+                    </li>
+                  )}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold mb-4">
+                  Rules & Guidelines
+                </h3>
+                <ul className="space-y-3">
+                  {listing.rules?.length ? (
+                    listing.rules.map((rule: string, i: number) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-muted-foreground"
+                      >
+                        <FileWarning className="h-5 w-5 text-orange-400 shrink-0 mt-0.5" />
+                        <span>{rule}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-muted-foreground italic">
+                      None specified
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar Booking Context */}
+          <div className="hidden lg:block">
+            <div className="sticky top-24 rounded-3xl border bg-card p-6 shadow-sm">
+              <div className="mb-6">
+                <span className="text-3xl font-bold">
+                  ${listing.rentAmount?.toLocaleString() || 5000}
+                </span>
+                <span className="text-muted-foreground"> / month</span>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-muted/50 border">
+                  <div className="flex items-center gap-3">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Available From</span>
+                  </div>
+                  <span className="font-semibold">
+                    {listing.availableFrom
+                      ? format(new Date(listing.availableFrom), "MMM do, yyyy")
+                      : "Immediately"}
+                  </span>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setVisitModal(true)}
+                className="w-full h-12 text-base rounded-2xl group"
+              >
+                Request a Visit
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Dialog open={visitModal} onOpenChange={setVisitModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Request a Property Tour</DialogTitle>
+            <DialogDescription>
+              Let the owner know you're interested. You can optionally include
+              notes about your availability or ask questions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Message to Owner (Optional)
+              </label>
+              <Textarea
+                placeholder="Hi! I'm interested in viewing this property in the upcoming week..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="resize-none h-32"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVisitModal(false)}>
+              Cancel
+            </Button>
+            <Button disabled={isPending} onClick={handleRequestVisit}>
+              {isPending ? "Submitting..." : "Send Request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

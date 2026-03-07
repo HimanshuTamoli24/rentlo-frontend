@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export type ListingCardData = {
   id?: string;
@@ -28,6 +29,8 @@ const formatRent = (value?: number) => {
 };
 
 export default function ListCard({ listing }: ListCardProps) {
+  const navigate = useNavigate();
+
   // Deterministic random image based on rentAmount or title length
   const imgSeed = (listing.rentAmount % 10) + 1;
   const imageIds = [
@@ -45,12 +48,15 @@ export default function ListCard({ listing }: ListCardProps) {
   const imageUrl = `https://images.unsplash.com/${imageIds[imgSeed % imageIds.length]}?auto=format&fit=crop&q=80&w=800&h=600`;
 
   // Mocks based on description length for variety since original model lacks beds/baths
-  const beds = Math.max(1, Math.ceil(listing.description.length / 50));
-  const baths = Math.max(1, Math.ceil(listing.description.length / 100));
+  const beds = Math.max(1, Math.ceil(listing.description?.length / 50 || 1));
+  const baths = Math.max(1, Math.ceil(listing.description?.length / 100 || 1));
   const sqft = listing.rentAmount * 1.5;
 
   return (
-    <div className="group flex cursor-pointer flex-col gap-3">
+    <div
+      onClick={() => navigate(`/property/${listing._id || listing.id}`)}
+      className="group flex cursor-pointer flex-col gap-3"
+    >
       <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl bg-muted">
         <img
           src={imageUrl}

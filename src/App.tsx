@@ -13,6 +13,7 @@ import ProtectedRoutes from "./components/protected-routes";
 
 import UserRoutes from "./module/user";
 import { AdminRoutes, ListRoutes } from "./module/list";
+import VisitRoutes from "./module/visit";
 
 function AppLayout() {
   return (
@@ -29,12 +30,15 @@ function AppLayout() {
 }
 
 import UnauthorizedPage from "./components/unauthorized-page";
+import ListDetailPage from "./module/list/pages/detail-page";
 
 function App() {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={<ListPage />} />
+      <Route path="/property/:id" element={<ListDetailPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
       {/* Authenticated routes */}
@@ -43,6 +47,7 @@ function App() {
           <Route path="/admin/*" element={<AdminRoutes />} />
           <Route path="/listings/*" element={<ListRoutes />} />
           <Route path="/users/*" element={<UserRoutes />} />
+          <Route path="/visits/*" element={<VisitRoutes />} />
         </Route>
       </Route>
 
