@@ -21,21 +21,20 @@ import { Link, useLocation } from "react-router";
 
 const ALL_MENU_ITEMS = [
   {
-    title: "Lists (Admin)",
-    href: "/admin",
-    icon: List,
-    roles: ["ADMIN", "BIGBOSS"],
+    title: "t",
+    href: "/",
+    icon: UserRound,
   },
   {
-    title: "My Listings",
-    href: "/owner", // Assuming an owner dashboard will be here
-    icon: List,
-    roles: ["OWNER", "ADMIN", "BIGBOSS"],
+    title: "BigBoss",
+    href: "/bigboss",
+    icon: UserRound,
+    roles: ["BIGBOSS"],
   },
   {
     title: "Create List",
     href: "/listings/create",
-    icon: Building2, // Re-using Building2 or we could use Plus
+    icon: Building2,
     roles: ["OWNER", "ADMIN", "BIGBOSS"],
   },
   {
@@ -44,28 +43,15 @@ const ALL_MENU_ITEMS = [
     icon: UserRound,
     roles: ["ADMIN", "BIGBOSS"],
   },
-  {
-    title: "Visits",
-    href: "/visits",
-    icon: CalendarClock,
-    roles: ["ADMIN", "BIGBOSS", "TENANT", "OWNER"],
-  },
 ];
+
+import { useAuth } from "@/context/state.context.tsx";
 
 export function AppSidebar() {
   const location = useLocation();
+  const { role } = useAuth();
 
-  // Parse user role
-  const userStr = localStorage.getItem("user");
-  let userRole = localStorage.getItem("role") || "";
-  try {
-    if (userStr) {
-      const user = JSON.parse(userStr);
-      userRole = user?.role || user?.data?.role || userRole;
-    }
-  } catch (e) {}
-
-  const normalizedRole = userRole.toUpperCase();
+  const normalizedRole = (role || "").toUpperCase();
 
   const menuItems = ALL_MENU_ITEMS.filter(
     (item) => !item.roles || item.roles.includes(normalizedRole),

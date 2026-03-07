@@ -39,6 +39,7 @@ export const useLogout = () => {
       console.log("User logged out successfully:", data);
       localStorage.removeItem("user");
       localStorage.removeItem("role");
+      localStorage.removeItem("token");
       window.location.href = "/auth";
     },
     onError: (error) => {
