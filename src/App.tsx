@@ -27,16 +27,40 @@ function AppLayout() {
   );
 }
 
+import AdminListPage from "./module/list/pages/admin-list";
+
+import ProtectedRoutes from "./components/protected-routes";
+
 function App() {
   return (
     <Routes>
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/" element={<ListPage />} />
 
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<ListPage />} />
-        <Route path="/users" element={<User />} />
-        <Route path="/users/:id" element={<UserDetail />} />
-        <Route path="/listings/create" element={<CreateList />} />
+      {/* Authenticated routes */}
+      <Route element={<ProtectedRoutes />}>
+        <Route element={<AppLayout />}>
+          {/* Admin routes */}
+          <Route
+            element={<ProtectedRoutes allowedRoles={["ADMIN", "BIGBOSS"]} />}
+          >
+            <Route path="/admin" element={<AdminListPage />} />
+            <Route path="/users" element={<User />} />
+            <Route path="/users/:id" element={<UserDetail />} />
+          </Route>
+
+          {/* Owner routes */}
+          <Route
+            element={
+              <ProtectedRoutes allowedRoles={["ADMIN", "BIGBOSS", "OWNER"]} />
+            }
+          >
+            <Route path="/create-list" element={<CreateList />} />
+            <Route path="/listings/create" element={<CreateList />} />
+          </Route>
+
+          {/* Any other routes... */}
+        </Route>
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
