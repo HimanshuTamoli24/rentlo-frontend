@@ -19,14 +19,7 @@ type ListCardProps = {
   listing: ListingCardData;
 };
 
-const formatRent = (value?: number) => {
-  if (typeof value !== "number") return "-";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value);
-};
+import { formatCurrency } from "@/utils/format-currency";
 
 export default function ListCard({ listing }: ListCardProps) {
   const navigate = useNavigate();
@@ -76,7 +69,7 @@ export default function ListCard({ listing }: ListCardProps) {
       </div>
       <div className="space-y-1.5 px-1 relative">
         <h3 className="text-2xl font-bold tracking-tight text-foreground">
-          {formatRent(listing.rentAmount)}
+          {formatCurrency(listing.rentAmount)}
         </h3>
         <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           <MapPin className="h-4 w-4 shrink-0" />

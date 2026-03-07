@@ -17,8 +17,7 @@ type RejectListingPayload = {
 };
 
 export const createListApi = () => ({
-  getLists: async () => {
-    const params = new URLSearchParams();
+  getLists: async (params?: Record<string, any>) => {
     const { data } = await axiosInstance.get("/listings", { params });
     return data;
   },

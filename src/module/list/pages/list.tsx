@@ -13,23 +13,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { formatCurrency } from "@/utils/format-currency";
 
 export default function ListPage() {
-  const { data, isLoading, isError } = useLists();
-
-  // States for filter control (stubbed out since backend filter might not be connected yet)
   const [searchTerm, setSearchTerm] = useState("");
-  const [priceRange, setPriceRange] = useState([5000]);
-
-  const rawLists: ListingCardData[] = data?.data || [];
-
-  // Local Filtering logic just as a placeholder to make UI reactive based on the stub features
-  const lists = rawLists.filter(
-    (list) =>
-      list.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      list.location?.toLowerCase().includes(searchTerm.toLowerCase()),
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [priceRange, setPriceRange] = useState([69000]);
+  const [moveInOption, setMoveInOption] = useState("1day");
+  const [locationCode, setLocationCode] = useState<string | undefined>(
+    undefined,
   );
+
+  // Debounce search term to avoid excessive API calls
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const { data, isLoading, isError } = useLists({
+    search: debouncedSearch,
+    rentAmount: priceRange[0],
+    moveIn: moveInOption,
+    location: locationCode,
+  });
+
+  const lists: ListingCardData[] = data?.data || [];
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans">
@@ -41,8 +52,8 @@ export default function ListPage() {
           <aside className="w-full lg:w-[320px] shrink-0 space-y-8 rounded-2xl border bg-card p-6 shadow-sm h-fit sticky top-24">
             {/* INPUT SEARCH */}
             <div className="space-y-3">
-              <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Input Search
+              <label className="text-sm font-semibold tracking-wider text-muted-foreground">
+                Please Search
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -61,12 +72,15 @@ export default function ListPage() {
                 <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   Progress Bar (Price)
                 </label>
-                <span className="text-sm font-medium">${priceRange[0]}</span>
+                <span className="text-sm font-medium">
+                  {" "}
+                  {formatCurrency(0)} -{formatCurrency(priceRange[0])}
+                </span>
               </div>
               <Slider
-                defaultValue={[5000]}
-                max={10000}
-                step={100}
+                defaultValue={[69000]}
+                max={500000}
+                step={1000}
                 value={priceRange}
                 onValueChange={setPriceRange}
                 className="mt-2"
@@ -78,10 +92,15 @@ export default function ListPage() {
               <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Move In Date Option
               </label>
-              <Tabs defaultValue="1day" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="1day">1 DAY</TabsTrigger>
-                  <TabsTrigger value="2day">2 DAY</TabsTrigger>
+              <Tabs
+                value={moveInOption}
+                onValueChange={setMoveInOption}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="1day">1 D</TabsTrigger>
+                  <TabsTrigger value="7day">7 D</TabsTrigger>
+                  <TabsTrigger value="15day">15 D</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -91,15 +110,18 @@ export default function ListPage() {
               <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Location Select
               </label>
-              <Select>
+              <Select value={locationCode} onValueChange={setLocationCode}>
                 <SelectTrigger className="w-full h-11">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="la">Los Angeles</SelectItem>
-                  <SelectItem value="ny">New York</SelectItem>
-                  <SelectItem value="sf">San Francisco</SelectItem>
-                  <SelectItem value="mia">Miami</SelectItem>
+                  <SelectItem value="epsteinisland">Epstein island</SelectItem>
+                  <SelectItem value="jaipur">Jaipur </SelectItem>
+                  <SelectItem value="patiala">Patiala </SelectItem>
+                  <SelectItem value="chaicode">Chaicode HeadQuater</SelectItem>
+                  <SelectItem value="more">
+                    More option buy our 69dollar plan :)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

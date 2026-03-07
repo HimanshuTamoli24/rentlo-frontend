@@ -1,13 +1,23 @@
 import { Route, Routes } from "react-router";
-import AdminListPage from "./pages/admin-list";
+import BigBossListPage from "./pages/bigboss-list";
 import CreateList from "./pages/create-list";
 import ProtectedRoutes from "@/components/protected-routes";
+import OwnerTenant from "./pages/owner-tenant";
 
-export function AdminRoutes() {
+export function BigBossRoutes() {
   return (
     <Routes>
       <Route element={<ProtectedRoutes allowedRoles={["ADMIN", "BIGBOSS"]} />}>
-        <Route index element={<AdminListPage />} />
+        <Route index element={<BigBossListPage />} />
+      </Route>
+    </Routes>
+  );
+}
+export function OwnerTenantRoutes() {
+  return (
+    <Routes>
+      <Route element={<ProtectedRoutes allowedRoles={["OWNER", "TENANT"]} />}>
+        <Route index element={<OwnerTenant />} />
       </Route>
     </Routes>
   );

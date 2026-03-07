@@ -12,8 +12,8 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-import { format } from "date-fns";
 import { useState } from "react";
+import { useAuth } from "@/context/state.context.tsx";
 import { useRequestVisit } from "../../visit/hooks/visit-hook";
 import {
   Dialog,
@@ -24,10 +24,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDate } from "@/utils/format-date";
+import { formatCurrency } from "@/utils/format-currency";
 
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuth } = useAuth();
   const { data, isLoading, isError } = useList(id || "");
   const { mutateAsync: requestVisit, isPending } = useRequestVisit();
 
@@ -39,8 +42,7 @@ export default function ListDetailPage() {
 
   const listing = data.data;
 
-  // Simple hardcoded user/role check so we don't crash and user sees Auth screen if not logged in
-  const isLoggedIn = !!localStorage.getItem("user");
+  const isLoggedIn = isAuth;
 
   const handleRequestVisit = async () => {
     if (!isLoggedIn) {
@@ -152,7 +154,7 @@ export default function ListDetailPage() {
             <div className="sticky top-24 rounded-3xl border bg-card p-6 shadow-sm">
               <div className="mb-6">
                 <span className="text-3xl font-bold">
-                  ${listing.rentAmount?.toLocaleString() || 5000}
+                  {formatCurrency(listing.rentAmount || 5000)}
                 </span>
                 <span className="text-muted-foreground"> / month</span>
               </div>
@@ -165,7 +167,7 @@ export default function ListDetailPage() {
                   </div>
                   <span className="font-semibold">
                     {listing.availableFrom
-                      ? format(new Date(listing.availableFrom), "MMM do, yyyy")
+                      ? formatDate(listing.availableFrom, "MMM do, yyyy")
                       : "Immediately"}
                   </span>
                 </div>
