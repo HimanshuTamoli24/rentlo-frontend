@@ -12,7 +12,7 @@ import NotFoundPage from "./components/not-found";
 import ProtectedRoutes from "./components/protected-routes";
 
 import UserRoutes from "./module/user";
-import { AdminRoutes, ListRoutes } from "./module/list";
+import { BigBossRoutes, ListRoutes, OwnerTenantRoutes } from "./module/list";
 import VisitRoutes from "./module/visit";
 
 function AppLayout() {
@@ -44,10 +44,11 @@ function App() {
       {/* Authenticated routes */}
       <Route element={<ProtectedRoutes />}>
         <Route element={<AppLayout />}>
-          <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/bigboss/*" element={<BigBossRoutes />} />
           <Route path="/listings/*" element={<ListRoutes />} />
           <Route path="/users/*" element={<UserRoutes />} />
           <Route path="/visits/*" element={<VisitRoutes />} />
+          <Route path="/owner-tenant/*" element={<OwnerTenantRoutes />} />
         </Route>
       </Route>
 
