@@ -37,7 +37,17 @@ export default function Login() {
   const onSubmit = async (data: any) => {
     await toast.promise(login(data), {
       loading: "Logging in...",
-      success: () => {
+      success: (res) => {
+        const userData = res?.data || res;
+        localStorage.setItem("user", JSON.stringify(userData));
+        if (userData?.role) {
+          localStorage.setItem("role", userData.role);
+        } else {
+          // Fallback if not specified in response
+          localStorage.setItem("role", "TENANT");
+        }
+
+        // Role based redirect could happen here, but for now just go home
         navigate("/");
         return "Login successful!";
       },
