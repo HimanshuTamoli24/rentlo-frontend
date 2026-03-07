@@ -7,11 +7,12 @@ import {
   SidebarTrigger,
 } from "./components/ui/sidebar";
 import { Outlet, Route, Routes } from "react-router";
-import User from "./module/user/pages/user";
-import UserDetail from "./module/user/pages/user-detail";
 import ListPage from "./module/list/pages/list";
 import NotFoundPage from "./components/not-found";
-import CreateList from "./module/list/pages/create-list";
+import ProtectedRoutes from "./components/protected-routes";
+
+import UserRoutes from "./module/user";
+import { AdminRoutes, ListRoutes } from "./module/list";
 
 function AppLayout() {
   return (
@@ -27,10 +28,6 @@ function AppLayout() {
   );
 }
 
-import AdminListPage from "./module/list/pages/admin-list";
-
-import ProtectedRoutes from "./components/protected-routes";
-
 function App() {
   return (
     <Routes>
@@ -40,26 +37,9 @@ function App() {
       {/* Authenticated routes */}
       <Route element={<ProtectedRoutes />}>
         <Route element={<AppLayout />}>
-          {/* Admin routes */}
-          <Route
-            element={<ProtectedRoutes allowedRoles={["ADMIN", "BIGBOSS"]} />}
-          >
-            <Route path="/admin" element={<AdminListPage />} />
-            <Route path="/users" element={<User />} />
-            <Route path="/users/:id" element={<UserDetail />} />
-          </Route>
-
-          {/* Owner routes */}
-          <Route
-            element={
-              <ProtectedRoutes allowedRoles={["ADMIN", "BIGBOSS", "OWNER"]} />
-            }
-          >
-            <Route path="/create-list" element={<CreateList />} />
-            <Route path="/listings/create" element={<CreateList />} />
-          </Route>
-
-          {/* Any other routes... */}
+          <Route path="/admin/*" element={<AdminRoutes />} />
+          <Route path="/listings/*" element={<ListRoutes />} />
+          <Route path="/users/*" element={<UserRoutes />} />
         </Route>
       </Route>
 
