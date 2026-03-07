@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createListApi } from "../services/list-api";
 
-export const useLists = () => {
+export const useLists = (params?: Record<string, any>) => {
   const listApi = createListApi();
   return useQuery({
-    queryKey: ["lists"],
-    queryFn: listApi.getLists,
+    queryKey: ["lists", params],
+    queryFn: () => listApi.getLists(params),
   });
 };
 

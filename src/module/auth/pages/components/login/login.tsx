@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "@/context/state.context.tsx";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address").min(1, "Email is required"),
@@ -34,21 +35,37 @@ export default function Login() {
     },
   });
 
+  const { setUser, setRole, setIsAuth } = useAuth();
+
   const onSubmit = async (data: any) => {
     await toast.promise(login(data), {
       loading: "Logging in...",
       success: (res) => {
         const userData = res?.data || res;
+        const role = userData?.role || "TENANT";
+
         localStorage.setItem("user", JSON.stringify(userData));
-        if (userData?.role) {
-          localStorage.setItem("role", userData.role);
-        } else {
-          // Fallback if not specified in response
-          localStorage.setItem("role", "TENANT");
+        localStorage.setItem("role", role);
+        if (userData?.token) {
+          localStorage.setItem("token", userData.token);
         }
 
-        // Role based redirect could happen here, but for now just go home
-        navigate("/");
+        setIsAuth(true);
+        setRole(role);
+        setUser(userData);
+
+        switch (role) {
+          case "OWNER":
+            navigate("/owner");
+            break;
+          case "TENANT":
+            navigate("/");
+            break;
+          case "BIGBOSS":
+            navigate("/bigboss");
+            break;
+        }
+
         return "Login successful!";
       },
       error: "Login failed. Please check your credentials and try again.",

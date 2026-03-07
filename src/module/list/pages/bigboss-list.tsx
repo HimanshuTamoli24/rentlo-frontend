@@ -1,0 +1,454 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { Bar, BarChart, XAxis, YAxis } from "recharts";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  useAdminLists,
+  useAcceptListing,
+  useRejectListing,
+} from "../hooks/list-hook";
+import LoadingPage from "@/components/loading";
+import ErrorPage from "@/components/error-page";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import MainLayout from "@/components/main-layout";
+
+export default function BigBossListPage() {
+  const { data, isLoading, isError } = useAdminLists();
+  const { mutateAsync: acceptListing, isPending: isAccepting } =
+    useAcceptListing();
+  const { mutateAsync: rejectListing, isPending: isRejecting } =
+    useRejectListing();
+
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(
+    null,
+  );
+  const [rejectReason, setRejectReason] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  if (isLoading) return <LoadingPage />;
+  if (isError) return <ErrorPage />;
+
+  const listings = data?.data || [];
+
+  // Calculate Stats
+  const stats = {
+    approved: listings.filter((l: any) => l.status === "APPROVED").length,
+    rejected: listings.filter((l: any) => l.status === "REJECTED").length,
+    draft: listings.filter((l: any) => l.status === "DRAFT").length,
+    total: listings.length,
+  };
+
+  const filteredListings = listings.filter((l: any) => {
+    if (!statusFilter) return true;
+    return l.status === statusFilter;
+  });
+
+  const chartData = [
+    {
+      label: "Interactions",
+      approved: stats.approved,
+      rejected: stats.rejected,
+      draft: stats.draft,
+    },
+  ];
+
+  const chartConfig = {
+    approved: { label: "Approved", color: "hsl(var(--primary))" },
+    rejected: { label: "Rejected", color: "hsl(var(--destructive))" },
+    draft: { label: "Draft", color: "#f59e0b" },
+  } satisfies ChartConfig;
+
+  const handleAccept = async (id: string) => {
+    try {
+      await acceptListing(id);
+      toast.success("Listing approved successfully");
+    } catch (err) {
+      toast.error("Failed to approve listing");
+    }
+  };
+
+  const openRejectModal = (id: string) => {
+    setSelectedListingId(id);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  };
+
+  const handleReject = async () => {
+    if (!selectedListingId) return;
+    if (!rejectReason.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
+
+    try {
+      await rejectListing({
+        listId: selectedListingId,
+        payload: { reason: rejectReason },
+      });
+      toast.success("Listing rejected successfully");
+      setRejectModalOpen(false);
+    } catch (err) {
+      toast.error("Failed to reject listing");
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return (
+          <div className="inline-flex items-center rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+            <div className="mr-2 h-1.5 w-1.5 rounded-full bg-green-500" />
+            Approved
+          </div>
+        );
+      case "DRAFT":
+        return (
+          <div className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+            <div className="mr-2 h-1.5 w-1.5 rounded-full bg-amber-500" />
+            Draft
+          </div>
+        );
+      case "REJECTED":
+        return (
+          <div className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">
+            <div className="mr-2 h-1.5 w-1.5 rounded-full bg-red-500" />
+            Rejected
+          </div>
+        );
+      default:
+        return (
+          <div className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700">
+            <div className="mr-2 h-1.5 w-1.5 rounded-full bg-gray-500" />
+            {status}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <MainLayout
+      title="BigBoss Dashboard"
+      description="Manage, approve, or reject property listings."
+    >
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {[
+          {
+            label: "Total Properties",
+            value: stats.total,
+            color: "bg-primary",
+            filter: null,
+          },
+          {
+            label: "Draft",
+            value: stats.draft,
+            color: "bg-amber-500",
+            filter: "DRAFT",
+          },
+          {
+            label: "Rejected",
+            value: stats.rejected,
+            color: "bg-red-500",
+            filter: "REJECTED",
+          },
+          {
+            label: "Approved",
+            value: stats.approved,
+            color: "bg-green-500",
+            filter: "APPROVED",
+          },
+        ].map((stat, i) => (
+          <Card
+            key={i}
+            className={`p-4 border shadow-sm cursor-pointer transition-all hover:ring-2 hover:ring-primary/20 ${statusFilter === stat.filter ? "ring-2 ring-primary bg-primary/5" : ""}`}
+            onClick={() => setStatusFilter(stat.filter)}
+          >
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              {stat.label}
+            </p>
+            <div className="flex items-baseline justify-between mt-2">
+              <h3 className="text-2xl font-bold">{stat.value}</h3>
+              <div className={`h-1.5 w-1.5 rounded-full ${stat.color}`} />
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="bg-card px-6 py-4 flex flex-row items-center justify-between border-b">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {filteredListings.length} Results{" "}
+              {statusFilter && `(${statusFilter})`}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="w-full overflow-x-auto">
+            <Table className="table-fixed w-full">
+              <TableHeader className="bg-card">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-6 font-semibold text-muted-foreground w-[350px]">
+                    Property
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground w-[150px]">
+                    Location
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground w-[120px]">
+                    Rent
+                  </TableHead>
+                  <TableHead className="font-semibold text-muted-foreground w-[180px]">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-6 text-right font-semibold text-muted-foreground w-[180px]">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredListings.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No listings found for this category.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredListings.map((listing: any) => {
+                    const id = listing.id || listing._id;
+                    return (
+                      <TableRow
+                        key={id}
+                        className="transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                      >
+                        <TableCell className="align-top relative max-w-[300px] px-6 overflow-hidden">
+                          <Accordion
+                            type="single"
+                            collapsible
+                            className="w-full"
+                          >
+                            <AccordionItem
+                              value="description"
+                              className="border-b-0"
+                            >
+                              <AccordionTrigger className="py-2 hover:no-underline justify-start gap-2 data-[state=open]:text-primary text-left">
+                                <span className="font-semibold line-clamp-1 break-all w-full leading-tight">
+                                  {listing.title}
+                                </span>
+                              </AccordionTrigger>
+                              <AccordionContent className="text-sm text-muted-foreground pt-1 pb-3 leading-relaxed wrap-break-word overflow-hidden w-full">
+                                {listing.description}
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                          {listing.status === "DRAFT" &&
+                            listing.rejectionReason && (
+                              <div className="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-800 flex items-start gap-1">
+                                <AlertCircle className="size-3 mt-0.5 shrink-0" />
+                                <span>Reason: {listing.rejectionReason}</span>
+                              </div>
+                            )}
+                        </TableCell>
+                        <TableCell className="align-top pt-4 max-w-[100px]">
+                          <div
+                            className="line-clamp-1 truncate text-muted-foreground"
+                            title={listing.location}
+                          >
+                            {listing.location}
+                          </div>
+                        </TableCell>
+                        <TableCell className="align-top pt-4 font-medium text-foreground">
+                          {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: "USD",
+                            maximumFractionDigits: 0,
+                          }).format(listing.rentAmount)}
+                        </TableCell>
+                        <TableCell className="align-top pt-4">
+                          {getStatusBadge(listing.status)}
+                        </TableCell>
+                        <TableCell className="text-right align-top pt-3 px-6">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                              onClick={() => handleAccept(id)}
+                              disabled={
+                                isAccepting || listing.status !== "DRAFT"
+                              }
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700"
+                              onClick={() => openRejectModal(id)}
+                              disabled={
+                                isRejecting || listing.status !== "DRAFT"
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <Card className="lg:col-span-2 p-6 border shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-lg">Listing Overview</h3>
+            <span className="text-xs text-muted-foreground">
+              Volume in units
+            </span>
+          </div>
+          <div className="h-[240px] w-full">
+            <ChartContainer config={chartConfig} className="w-full h-full">
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
+                <XAxis dataKey="label" hide />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  fontSize={12}
+                  stroke="#888888"
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Bar
+                  dataKey="approved"
+                  stackId="a"
+                  fill="hsl(var(--primary))"
+                  radius={[0, 0, 4, 4]}
+                  barSize={60}
+                />
+                <Bar
+                  dataKey="draft"
+                  stackId="a"
+                  fill="#f59e0b"
+                  radius={[0, 0, 0, 0]}
+                  barSize={60}
+                />
+                <Bar
+                  dataKey="rejected"
+                  stackId="a"
+                  fill="hsl(var(--destructive))"
+                  radius={[4, 4, 0, 0]}
+                  barSize={60}
+                />
+              </BarChart>
+            </ChartContainer>
+          </div>
+        </Card>
+
+        <Card className="p-6 border shadow-sm flex flex-col items-center justify-center space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">Admin Status</p>
+            <h4 className="text-xl font-bold">Health Score</h4>
+          </div>
+          <div className="relative size-32 flex items-center justify-center">
+            <svg className="size-full" viewBox="0 0 36 36">
+              <path
+                className="text-muted fill-none stroke-current"
+                strokeWidth="3"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path
+                className="text-primary fill-none stroke-current"
+                strokeWidth="3"
+                strokeDasharray={`${Math.round((stats.approved / stats.total) * 100) || 0}, 100`}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            </svg>
+            <span className="absolute text-xl font-bold">
+              {Math.round((stats.approved / (stats.total || 1)) * 100)}%
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Percentage of properties approved
+          </p>
+        </Card>
+      </div>
+      <Dialog open={rejectModalOpen} onOpenChange={setRejectModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Listing</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this listing. The creator
+              will see this reason allowing them to fix the issues.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="reason" className="text-right">
+              Reason <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="reason"
+              placeholder="e.g. The images provided are too low quality..."
+              className="mt-2 min-h-[100px]"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              required
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={isRejecting}
+            >
+              Confirm Rejection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </MainLayout>
+  );
+}

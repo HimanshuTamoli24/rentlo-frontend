@@ -1,5 +1,6 @@
+import type { AxiosInstance } from "axios";
 
-export const createAuthApi = (axiosInstance) => ({
+export const createAuthApi = (axiosInstance: AxiosInstance) => ({
   register: async (userData: any) => {
     const { data } = await axiosInstance.post("/auth/register", userData);
     return data;
