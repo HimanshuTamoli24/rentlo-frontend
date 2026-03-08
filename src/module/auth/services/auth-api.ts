@@ -9,8 +9,8 @@ export const createAuthApi = (axiosInstance: AxiosInstance) => ({
     const { data } = await axiosInstance.post("/auth/login", credentials);
     return data;
   },
-  logout: async () => {
-    const { data } = await axiosInstance.post("/auth/logout");
+  logout: async (user: any) => {
+    const { data } = await axiosInstance.post(`/auth/logout`, user);
     return data;
   },
 });

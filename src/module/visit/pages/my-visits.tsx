@@ -8,6 +8,7 @@ import {
 } from "../hooks/visit-hook";
 import LoadingPage from "@/components/loading";
 import ErrorPage from "@/components/error-page";
+import { confirm } from "@/components/alert-box";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -110,6 +111,12 @@ export default function MyVisitsPage() {
   const handleDecisionSubmit = async () => {
     if (!decisionModal.visitId || !decisionModal.decision) return;
     try {
+      const ok = await confirm.warning({
+        message: "Are you sure you want to submit this decision?",
+        confirmText: "Submit Decision",
+      });
+      if (!ok) return;
+
       await makeDecision({
         visitId: decisionModal.visitId,
         payload: { decision: decisionModal.decision, notes },
@@ -125,6 +132,12 @@ export default function MyVisitsPage() {
       return;
     }
     try {
+      const ok = await confirm.update({
+        message: "Are you sure you want to schedule this visit?",
+        confirmText: "Schedule",
+      });
+      if (!ok) return;
+
       await scheduleVisit({
         visitId: scheduleModal.visitId,
         scheduledDate: new Date(scheduledDate).toISOString(),
@@ -138,6 +151,11 @@ export default function MyVisitsPage() {
 
   const handleStatusUpdate = async (visitId: string, status: string) => {
     try {
+      const ok = await confirm.update({
+        message: `Are you sure you want to update the status to ${status}?`,
+      });
+      if (!ok) return;
+
       await updateStatus({ visitId, status });
     } catch (err) {}
   };
@@ -328,7 +346,14 @@ export default function MyVisitsPage() {
                           {visit.status === "SCHEDULED" && (
                             <Button
                               className="w-full bg-primary"
-                              onClick={() => markVisited(visit._id)}
+                              onClick={async () => {
+                                const ok = await confirm.update({
+                                  message:
+                                    "Are you sure you want to mark this visit as completed?",
+                                  confirmText: "Mark Completed",
+                                });
+                                if (ok) markVisited(visit._id);
+                              }}
                               disabled={isMarking}
                             >
                               I Have Visited

@@ -12,27 +12,41 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { User, ShieldCheck, UserCog, Ghost } from "lucide-react";
+import { Facehash } from "facehash";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import SEO from "@/components/seo";
+import { useAuth } from "@/context/state.context.tsx";
 
 export default function UserPage() {
   const { data, isLoading, isError } = useUsers();
   const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const { user: currentUser } = useAuth();
 
   const users = data?.data || [];
 
   const filteredUsers = useMemo(() => {
     const search = searchParams.get("search")?.toLowerCase() || "";
-    if (!search) return users;
-    return users.filter(
-      (u: any) =>
-        u.name?.toLowerCase().includes(search) ||
-        u.email?.toLowerCase().includes(search) ||
-        u.role?.toLowerCase().includes(search),
-    );
+    const filterRole = searchParams.get("status")?.toUpperCase();
+
+    let result = users;
+
+    if (filterRole) {
+      result = result.filter((u: any) => u.role === filterRole);
+    }
+
+    if (search) {
+      result = result.filter(
+        (u: any) =>
+          u.name?.toLowerCase().includes(search) ||
+          u.email?.toLowerCase().includes(search) ||
+          u.role?.toLowerCase().includes(search),
+      );
+    }
+
+    return result;
   }, [users, searchParams]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -84,7 +98,12 @@ export default function UserPage() {
       />
 
       <MainLayout.Header className="mt-4">
-        <MainLayout.Search placeholder="Filter by name, email or role..." />
+        <div className="flex items-center gap-4 flex-1">
+          <MainLayout.StatusFilters
+            options={["owner", "tenant", "bigboss"]}
+          />
+          <MainLayout.Search placeholder="Filter by name, email or role..." />
+        </div>
         <MainLayout.Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -129,39 +148,46 @@ export default function UserPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  paginatedUsers.map((user: any) => (
-                    <TableRow
-                      key={user._id}
-                      className="group transition-colors hover:bg-muted/50"
-                    >
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="size-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shadow-sm">
-                            {user.name?.charAt(0).toUpperCase() || "U"}
+                  paginatedUsers.map((user: any) => {
+                    const isCurrentUser = currentUser?.email === user.email;
+
+                    return (
+                      <TableRow
+                        key={user._id}
+                        className={`group transition-colors hover:bg-muted/50 ${isCurrentUser ? "bg-primary/5 hover:bg-primary/10 border-l-2 border-l-primary" : ""}`}
+                      >
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <Facehash
+                              name={user.name || user.email || "User"}
+                              size={40}
+                              className={`rounded-2xl shadow-sm ${isCurrentUser ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                              colorClasses={["bg-primary"]}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-bold text-foreground leading-tight">
+                                {user.name}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black mt-0.5">
+                                ID: {user._id?.slice(-8)}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-foreground leading-tight">
-                              {user.name}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black mt-0.5">
-                              ID: {user._id?.slice(-8)}
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-4 font-medium text-muted-foreground">
-                        {user.email}
-                      </TableCell>
-                      <TableCell className="py-4">
-                        {getRoleBadge(user.role)}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right text-muted-foreground tabular-nums font-medium">
-                        {user.createdAt
-                          ? format(new Date(user.createdAt), "MMM d, yyyy")
-                          : "Legacy Account"}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        </TableCell>
+                        <TableCell className="py-4 font-medium text-muted-foreground">
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="py-4">
+                          {getRoleBadge(user.role)}
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-right text-muted-foreground tabular-nums font-medium">
+                          {user.createdAt
+                            ? format(new Date(user.createdAt), "MMM d, yyyy")
+                            : "Legacy Account"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

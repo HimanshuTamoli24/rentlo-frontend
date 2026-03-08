@@ -57,6 +57,15 @@ export default function ListDetailPage() {
 
   const listing = data.data;
 
+  // Deterministic random image based on ID or title
+  const idStr = listing._id || listing.id || listing.title || "";
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const imgSeed = Math.abs(hash) % propertyImages.length;
+  const imageUrl = propertyImages[imgSeed];
+
   const isLoggedIn = isAuth;
 
   const handleRequestVisit = async () => {
@@ -87,7 +96,7 @@ export default function ListDetailPage() {
     "@type": "Accommodation",
     name: listing.title,
     description: listing.description,
-    image: propertyImages[(listing.rentAmount || 0) % propertyImages.length],
+    image: imageUrl,
     address: {
       "@type": "PostalAddress",
       addressLocality: listing.location,
@@ -132,11 +141,7 @@ export default function ListDetailPage() {
                 />
               ) : (
                 <img
-                  src={
-                    propertyImages[
-                      (listing.rentAmount || 0) % propertyImages.length
-                    ]
-                  }
+                  src={imageUrl}
                   alt={listing.title}
                   onError={() => setImgError(true)}
                   className="w-full h-full object-cover"

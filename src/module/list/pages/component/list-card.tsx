@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import { Link } from "react-router";
 import { formatCurrency } from "@/utils/format-currency";
 import { CalendarDays } from "lucide-react";
 import { formatDate } from "@/utils/format-date";
+import { Facehash } from "facehash";
+
+import image1 from "@/assets/property/1.png";
+import image2 from "@/assets/property/2.png";
+import image3 from "@/assets/property/3.png";
+import image4 from "@/assets/property/4.png";
+import image5 from "@/assets/property/5.png";
+import image6 from "@/assets/property/6.png";
+
+const propertyImages = [image1, image2, image3, image4, image5, image6];
 
 export type ListingCardData = {
   id?: string;
@@ -22,23 +33,16 @@ type ListCardProps = {
 };
 
 export default function ListCard({ listing }: ListCardProps) {
-  // Deterministic random image based on rentAmount or title length
-  const imgSeed = (listing.rentAmount % 10) + 1;
-  const imageIds = [
-    "photo-1600596542815-ffad4c1539a9",
-    "photo-1512917774080-9991f1c4c750",
-    "photo-1600607687920-4e2a09c15468",
-    "photo-1600585154340-be6161a56a0c",
-    "photo-1600566753190-17f0baa2a6c3",
-    "photo-1518780664697-55e3ad937233",
-    "photo-1513584684374-8bab748fbf90",
-    "photo-1583608205776-bfd35f0d9f83",
-    "photo-1502672260266-1c1de2d966ca",
-    "photo-1598228723793-52759bba239c",
-  ];
-  const imageUrl = `https://images.unsplash.com/${
-    imageIds[imgSeed % imageIds.length]
-  }?auto=format&fit=crop&q=80&w=800&h=600`;
+  const [imgError, setImgError] = useState(false);
+
+  // Deterministic random image based on ID or title
+  const idStr = listing._id || listing.id || listing.title || "";
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const imgSeed = Math.abs(hash) % propertyImages.length;
+  const imageUrl = propertyImages[imgSeed];
 
   // Deterministic but "random-looking" stats based on ID or title
   const seed =
@@ -59,12 +63,23 @@ export default function ListCard({ listing }: ListCardProps) {
       className="group flex flex-col gap-3 bg-muted p-2 rounded-md transition-all hover:bg-muted/80"
     >
       <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl bg-muted">
-        <img
-          src={imageUrl}
-          alt={`Exterior of ${listing.title}`}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {imgError ? (
+          <div className="w-full h-full flex items-center justify-center bg-muted">
+            <Facehash
+              name={listing.title + (listing._id || listing.id || "")}
+              size={300}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+        ) : (
+          <img
+            src={imageUrl}
+            alt={`Exterior of ${listing.title}`}
+            loading="lazy"
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        )}
       </div>
       <div className="space-y-1.5 px-1 relative bg-white/65 rounded-sm p-2">
         <h3 className="text-sm font-semibold text-foreground truncate">

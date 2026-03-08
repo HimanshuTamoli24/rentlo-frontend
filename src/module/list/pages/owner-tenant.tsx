@@ -29,6 +29,7 @@ import {
   Home,
   MessageSquare,
 } from "lucide-react";
+import { Facehash } from "facehash";
 import {
   Dialog,
   DialogContent,
@@ -120,6 +121,11 @@ export default function OwnerTenant() {
 
   const handleStatusUpdate = async (visitId: string, status: string) => {
     try {
+      const ok = await confirm.update({
+        message: `Are you sure you want to update the status to ${status}?`,
+      });
+      if (!ok) return;
+
       await updateStatus({ visitId, status });
       toast.success(`Status updated to ${status}`);
       if (detailModal.visit?._id === visitId) {
@@ -131,6 +137,12 @@ export default function OwnerTenant() {
   const handleScheduleSubmit = async () => {
     if (!scheduleModal.visitId || !scheduledDate) return;
     try {
+      const ok = await confirm.update({
+        message: "Are you sure you want to schedule this visit?",
+        confirmText: "Schedule",
+      });
+      if (!ok) return;
+
       await scheduleVisit({
         visitId: scheduleModal.visitId,
         scheduledDate: new Date(scheduledDate).toISOString(),
@@ -364,9 +376,16 @@ export default function OwnerTenant() {
           {detailModal.visit && (
             <div className="space-y-6 py-4">
               <div className="flex items-center gap-4">
-                <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  <User className="size-6" />
-                </div>
+                <Facehash
+                  name={
+                    isOwner
+                      ? detailModal.visit.tenant?.name || "Tenant"
+                      : "Property Owner"
+                  }
+                  size={48}
+                  className="rounded-2xl"
+                  colorClasses={["bg-primary"]}
+                />
                 <div>
                   <h4 className="font-bold text-lg">
                     {isOwner

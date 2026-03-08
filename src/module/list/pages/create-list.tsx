@@ -265,7 +265,7 @@ export default function CreateList() {
         {/* PREVIEW */}
 
         <div className="sticky top-10 bg-muted/75 p-4 rounded-lg">
-          <h1>Preview of your list...</h1>
+          <h1>Preview of your Property...</h1>
           <ListCard
             listing={{
               title: formData.title || "Preview title",
