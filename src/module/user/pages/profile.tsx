@@ -10,9 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Facehash } from "facehash";
 import {
-  User,
   Mail,
-  ShieldCheck,
   Calendar,
   Clock,
   CheckCircle2,
@@ -104,7 +102,7 @@ export default function ProfilePage() {
                     <Mail className="size-4" /> {user?.email}
                   </p>
                 </div>
-
+{/* 
                 <div className="pt-4 border-t space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-2">
@@ -124,7 +122,7 @@ export default function ProfilePage() {
                         : "Recently"}
                     </span>
                   </div>
-                </div>
+                </div> */}
               </div>
             </CardContent>
           </Card>
