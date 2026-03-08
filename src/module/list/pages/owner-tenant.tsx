@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { useAuth } from "@/context/state.context.tsx";
+import SEO from "@/components/seo";
 
 export default function OwnerTenant() {
   const { role } = useAuth();
@@ -90,9 +91,20 @@ export default function OwnerTenant() {
 
   const isLoading = isOwner ? ownerLoading : tenantLoading;
   const isError = isOwner ? ownerError : tenantError;
-  const visits = useMemo(() => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const rawVisits = useMemo(() => {
     return isOwner ? ownerData?.data || [] : tenantData?.data || [];
   }, [isOwner, ownerData, tenantData]);
+
+  const totalPages = Math.ceil(rawVisits.length / itemsPerPage);
+  const paginatedVisits = useMemo(() => {
+    return rawVisits.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    );
+  }, [rawVisits, currentPage, itemsPerPage]);
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <ErrorPage />;
@@ -154,30 +166,44 @@ export default function OwnerTenant() {
   };
 
   return (
-    <MainLayout
-      title={isOwner ? "Owner-Tenant Flow" : "My Tour Requests"}
-      description={
-        isOwner
-          ? "Manage tenant requests and property visits for your listings."
-          : "Track your tour requests and confirmed property schedules."
-      }
-    >
+    <MainLayout>
+      <SEO
+        title={isOwner ? "Flow Dashboard" : "My Tour Requests"}
+        description="Coordinate visits and manage tenant-owner interactions in real-time."
+      />
+      <MainLayout.Title
+        title={isOwner ? "Owner-Tenant Flow" : "My Tour Requests"}
+        description={
+          isOwner
+            ? "Manage tenant requests and property visits for your listings."
+            : "Track your tour requests and confirmed property schedules."
+        }
+        breadcrumb="Property Services"
+      />
+      <MainLayout.Header>
+        <div /> {/* Placeholder for filters if needed later */}
+        <MainLayout.Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </MainLayout.Header>
       <div className="grid grid-cols-1 gap-6">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <MessageSquare className="size-5 text-primary" />
-            Active Interactions ({visits.length})
+            Active Interactions ({rawVisits.length})
           </h2>
         </div>
 
-        {visits.length === 0 ? (
+        {rawVisits.length === 0 ? (
           <Card className="border-dashed border-2 py-20 text-center flex flex-col items-center">
             <User className="size-12 text-muted-foreground/20 mb-4" />
             <p className="text-muted-foreground">No active flows found.</p>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visits.map((visit: any) => {
+            {paginatedVisits.map((visit: any) => {
               const status = statusConfig[visit.status] || {
                 color: "bg-gray-100 text-gray-600",
                 label: visit.status,

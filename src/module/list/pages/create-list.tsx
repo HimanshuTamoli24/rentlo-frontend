@@ -32,6 +32,7 @@ import { useCreateList } from "../hooks/list-hook";
 import MainLayout from "@/components/main-layout";
 import ListCard from "./component/list-card";
 import { Separator } from "@/components/ui/separator";
+import SEO from "@/components/seo";
 import {
   Sparkles,
   Home,
@@ -71,7 +72,7 @@ export default function CreateList() {
       title: "Luxury 2BHK Apartment with Balcony",
       description:
         "Beautiful fully furnished apartment located in the heart of the city. Features a spacious living room, modular kitchen, and an east-facing balcony with a great view. Close to metro and shopping malls.",
-      location: "Skyline Residency, Sector 45, Gurgaon",
+      location: "epsteinisland",
       rentAmount: 25000,
       amenitiesInput: "WiFi, AC, Parking, Gym, Pool",
       rulesInput: "No smoking, Families preferred, ID proof required",
@@ -98,320 +99,188 @@ export default function CreateList() {
       loading: "Creating listing...",
       success: () => {
         navigate("/");
-        return "Listing created successfully!";
+        return "Listing created";
       },
-      error: "Failed to create listing. Please try again.",
+      error: "Failed to create listing",
     });
   };
 
   return (
-    <MainLayout
-      title="Add New Listing"
-      description="List your property and reach thousands of potential tenants."
-    >
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Form Section */}
-        <div className="lg:col-span-2 space-y-6">
-          <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <Home className="size-5" />
-                    </div>
-                    <CardTitle className="text-xl">Basic Information</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Provide the essential details about your property.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel required className="flex items-center gap-2">
-                          Title
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="e.g. Sunny 1BHK near Metro"
-                            className="bg-background/50"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+    <MainLayout>
+      <MainLayout.Title title="Create Listing" breadcrumb="Dashboard" />
+      <SEO
+        title="List Your Property"
+        description="Reach thousands of potential tenants. Create a professional listing for your property with Rentlo's intuitive interface."
+      />
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* FORM */}
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Property Details</CardTitle>
+              </CardHeader>
 
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel required className="flex items-center gap-2">
-                          Description
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            rows={4}
-                            placeholder="Tell potential tenants what makes your property special..."
-                            className="bg-background/50 resize-none"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel
-                            required
-                            className="flex items-center gap-2"
-                          >
-                            <MapPin className="size-4" /> Location
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="City, Neighborhood"
-                              className="bg-background/50"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="rentAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel
-                            required
-                            className="flex items-center gap-2"
-                          >
-                            <DollarSign className="size-4" /> Monthly Rent
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <span className="absolute left-3 top-2.5 text-muted-foreground">
-                                $
-                              </span>
-                              <Input
-                                type="number"
-                                min={0}
-                                placeholder="0"
-                                className="pl-7 bg-background/50"
-                                {...field}
-                                value={Number(field.value ?? 0)}
-                                onChange={(e) =>
-                                  field.onChange(e.target.valueAsNumber || 0)
-                                }
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="availableFrom"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel
-                            required
-                            className="flex items-center gap-2"
-                          >
-                            <Calendar className="size-4" /> Available From
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="date"
-                              className="bg-background/50"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel
-                            required
-                            className="flex items-center gap-2"
-                          >
-                            <Info className="size-4" /> Listing Status
-                          </FormLabel>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="bg-background/50">
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {listingStatus.map((status) => (
-                                <SelectItem key={status} value={status}>
-                                  {status}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <ListChecks className="size-5" />
-                    </div>
-                    <CardTitle className="text-xl">
-                      Additional Details
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="amenitiesInput"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amenities</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="WiFi, Parking, AC, Pool..."
-                            className="bg-background/50"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Comma-separated list of facilities available.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="rulesInput"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>House Rules</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="No smoking, No pets, ID proof..."
-                            className="bg-background/50"
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          List any specific requirements or restrictions.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </CardContent>
-              </Card>
-
-              <div className="flex items-center justify-end gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => navigate(-1)}
-                  className="px-8"
-                >
-                  Discard
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-10 h-11 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
-                >
-                  {isPending ? "Listing..." : "Publish Listing"}
-                </Button>
-              </div>
-            </form>
-          </FormProvider>
-        </div>
-
-        {/* Preview Section */}
-        <div className="space-y-6">
-          <div className="sticky top-6">
-            <div className="flex items-center gap-2 mb-4 px-2">
-              <Sparkles className="size-4 text-primary animate-pulse" />
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Live Preview
-              </h3>
-            </div>
-
-            <Card className="border-none shadow-2xl bg-card transition-all duration-300 overflow-hidden ring-1 ring-primary/5">
-              <div className="p-1">
-                <ListCard
-                  listing={{
-                    title: (formData.title as string) || "Your Property Title",
-                    description:
-                      (formData.description as string) ||
-                      "Description will appear here...",
-                    location: (formData.location as string) || "Location",
-                    rentAmount: Number(formData.rentAmount) || 0,
-                    status: (formData.status as string) || "DRAFT",
-                  }}
+              <CardContent className="space-y-6">
+                {/* TITLE */}
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="2BHK near metro" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <Separator />
-              <div className="p-4 bg-muted/30">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
-                  <span>
-                    Available from: {formData.availableFrom || "Not set"}
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full ${formData.status === "APPROVED" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}
-                  >
-                    {formData.status}
-                  </span>
+
+                {/* DESCRIPTION */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>Description</FormLabel>
+                      <FormControl>
+                        <Textarea rows={4} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* GRID */}
+                <div className="grid gap-4 md:grid-cols-3 w-full">
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel required>Location</FormLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue
+                                placeholder="Select location"
+                                className="truncate"
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+
+                          <SelectContent className="max-w-sm truncate">
+                            <SelectItem value="epsteinisland">
+                              Epstein island
+                            </SelectItem>
+                            <SelectItem value="jaipur">Jaipur </SelectItem>
+                            <SelectItem value="patiala">Patiala </SelectItem>
+                            <SelectItem value="chaicode">
+                              Chaicode HeadQuater
+                            </SelectItem>
+                            <SelectItem value="more" className="truncate">
+                              More option buy our 69dollar plan :)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="rentAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Rent</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            value={Number(field.value ?? 0)}
+                            onChange={(e) =>
+                              field.onChange(e.target.valueAsNumber || 0)
+                            }
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="availableFrom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Available From</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              </div>
+
+                {/* AMENITIES */}
+                <FormField
+                  control={form.control}
+                  name="amenitiesInput"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Amenities</FormLabel>
+                      <Input placeholder="WiFi, Parking, Gym" {...field} />
+                    </FormItem>
+                  )}
+                />
+
+                {/* RULES */}
+                <FormField
+                  control={form.control}
+                  name="rulesInput"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rules</FormLabel>
+                      <Input placeholder="No smoking, ID required" {...field} />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
             </Card>
 
-            <div className="mt-8 p-6 rounded-2xl bg-primary/5 border border-primary/10">
-              <h4 className="font-semibold text-primary flex items-center gap-2 mb-2 italic">
-                Pro Tip!
-              </h4>
-              <p className="text-sm text-balance leading-relaxed">
-                Visualizing your listing helps you ensure that the property
-                details and images will look great to potential tenants. Make
-                sure your title is catchy and your location is precise!
-              </p>
+            {/* ACTIONS */}
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(-1)}
+              >
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Creating..." : "Create Listing"}
+              </Button>
             </div>
-          </div>
+          </form>
+        </FormProvider>
+
+        {/* PREVIEW */}
+
+        <div className="sticky top-10 bg-muted/75 p-4 rounded-lg">
+          <h1>Preview of your list...</h1>
+          <ListCard
+            listing={{
+              title: formData.title || "Preview title",
+              description: formData.description || "Preview description",
+              location: formData.location || "Location",
+              rentAmount: Number(formData.rentAmount) || 0,
+              status: formData.status || "DRAFT",
+            }}
+          />
         </div>
       </div>
     </MainLayout>

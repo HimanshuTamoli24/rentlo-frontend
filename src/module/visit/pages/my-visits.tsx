@@ -89,9 +89,20 @@ export default function MyVisitsPage() {
 
   const isLoading = isOwner ? ownerLoading : tenantLoading;
   const isError = isOwner ? ownerError : tenantError;
-  const visits = useMemo(() => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
+  const rawVisits = useMemo(() => {
     return isOwner ? ownerData?.data || [] : tenantData?.data || [];
   }, [isOwner, ownerData, tenantData]);
+
+  const totalPages = Math.ceil(rawVisits.length / itemsPerPage);
+  const paginatedVisits = useMemo(() => {
+    return rawVisits.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    );
+  }, [rawVisits, currentPage, itemsPerPage]);
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <ErrorPage />;
@@ -162,9 +173,14 @@ export default function MyVisitsPage() {
           ? "Manage incoming visit requests from potential tenants."
           : "Track your upcoming property tours and viewing history."
       }
+      pagination={{
+        currentPage,
+        totalPages,
+        onPageChange: setCurrentPage,
+      }}
     >
       <div className="flex flex-col gap-6">
-        {visits.length === 0 ? (
+        {rawVisits.length === 0 ? (
           <Card className="border-dashed border-2 py-20 flex flex-col items-center justify-center text-center">
             <History className="size-12 text-muted-foreground/20 mb-4" />
             <CardTitle className="text-muted-foreground">
@@ -178,7 +194,7 @@ export default function MyVisitsPage() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {visits.map((visit: any) => {
+            {paginatedVisits.map((visit: any) => {
               const status = statusConfig[visit.status] || {
                 color: "bg-gray-100 text-gray-700",
                 label: visit.status,

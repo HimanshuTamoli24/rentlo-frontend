@@ -1,6 +1,8 @@
 import { useLists } from "../hooks/list-hook";
 import ListCard, { type ListingCardData } from "./component/list-card";
 import TopNav from "./component/top-nav";
+import Footer from "@/components/footer";
+import SEO from "@/components/seo";
 import ListSkeleton from "./component/list-skeleton";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -42,8 +44,26 @@ export default function ListPage() {
 
   const lists: ListingCardData[] = data?.data || [];
 
+  const listSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Property Listings",
+    description: "Available apartments and houses for rent.",
+    itemListElement: lists.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.title,
+      url: `https://rentlo.com/listings/${item.id || item._id}`,
+    })),
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-background font-sans">
+    <div className="flex  flex-col bg-background font-sans min-h-screen">
+      <SEO
+        title="Find Your Perfect Home"
+        description="Browse our curated list of apartments, houses, and luxury villas. Filter by price, location, and move-in availability."
+        schema={listSchema}
+      />
       <TopNav />
 
       <main className="flex-1 px-4 py-8 md:px-8 max-w-[1600px] mx-auto w-full">
@@ -53,12 +73,12 @@ export default function ListPage() {
             {/* INPUT SEARCH */}
             <div className="space-y-3">
               <label className="text-sm font-semibold tracking-wider text-muted-foreground">
-                Please Search
+                Search Appartment, house
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search bar"
+                  placeholder="Episiten Island "
                   className="pl-9 h-11"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -129,10 +149,7 @@ export default function ListPage() {
 
           {/* Right Side: Property List Area */}
           <div className="flex-1 w-full min-w-0">
-            <h1 className="text-2xl font-bold tracking-tight mb-6">
-              Our Filter List Here
-            </h1>
-
+       
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {isError ? (
                 <div className="col-span-full rounded-2xl border border-red-200 bg-red-50 p-12 text-center text-red-600 shadow-sm">

@@ -3,6 +3,7 @@ import { useList } from "../hooks/list-hook";
 import LoadingPage from "@/components/loading";
 import ErrorPage from "@/components/error-page";
 import TopNav from "./component/top-nav";
+import SEO from "@/components/seo";
 import { Button } from "@/components/ui/button";
 import {
   CalendarDays,
@@ -26,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/utils/format-date";
 import { formatCurrency } from "@/utils/format-currency";
+import { cn } from "@/lib/utils";
 
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +38,7 @@ export default function ListDetailPage() {
 
   const [visitModal, setVisitModal] = useState(false);
   const [notes, setNotes] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   if (isLoading) return <LoadingPage />;
   if (isError || !data?.data) return <ErrorPage />;
@@ -55,12 +58,40 @@ export default function ListDetailPage() {
       notes,
     });
 
+    setIsSubmitted(true);
     setVisitModal(false);
     setNotes("");
   };
 
+  const detailSchema = {
+    "@context": "https://schema.org",
+    "@type": "Accommodation",
+    name: listing.title,
+    description: listing.description,
+    image:
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2000",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: listing.location,
+    },
+    offers: {
+      "@type": "Offer",
+      price: listing.rentAmount,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans">
+      <SEO
+        title={listing.title}
+        description={
+          listing.description ||
+          "View details for this premium property on Rentlo."
+        }
+        schema={detailSchema}
+      />
       <TopNav />
       <main className="flex-1 px-4 py-8 md:px-8 max-w-[1200px] mx-auto w-full">
         <Button
@@ -86,9 +117,14 @@ export default function ListDetailPage() {
               <div className="flex items-center gap-2 mb-2 text-primary font-medium">
                 <MapPin className="h-4 w-4" />
                 <span>{listing.location}</span>
-                {listing.status === "PUBLISHED" && (
+                {listing.status === "PUBLISHED" && !isSubmitted && (
                   <span className="ml-auto bg-green-100 text-green-700 text-xs px-2.5 py-0.5 rounded-full font-semibold">
                     Published
+                  </span>
+                )}
+                {isSubmitted && (
+                  <span className="ml-auto bg-primary/10 text-primary text-xs px-2.5 py-0.5 rounded-full font-bold animate-pulse">
+                    SUBMITTED
                   </span>
                 )}
               </div>
@@ -175,10 +211,16 @@ export default function ListDetailPage() {
 
               <Button
                 onClick={() => setVisitModal(true)}
-                className="w-full h-12 text-base rounded-2xl group"
+                disabled={isSubmitted}
+                className={cn(
+                  "w-full h-12 text-base rounded-2xl group",
+                  isSubmitted && "bg-muted text-muted-foreground",
+                )}
               >
-                Request a Visit
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {isSubmitted ? "Request Submitted" : "Request a Visit"}
+                {!isSubmitted && (
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                )}
               </Button>
             </div>
           </div>

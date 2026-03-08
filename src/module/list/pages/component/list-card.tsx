@@ -1,6 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
+import { formatCurrency } from "@/utils/format-currency";
+import { CalendarDays } from "lucide-react";
+import { formatDate } from "@/utils/format-date";
 
 export type ListingCardData = {
   id?: string;
@@ -19,11 +22,7 @@ type ListCardProps = {
   listing: ListingCardData;
 };
 
-import { formatCurrency } from "@/utils/format-currency";
-
 export default function ListCard({ listing }: ListCardProps) {
-  const navigate = useNavigate();
-
   // Deterministic random image based on rentAmount or title length
   const imgSeed = (listing.rentAmount % 10) + 1;
   const imageIds = [
@@ -38,51 +37,59 @@ export default function ListCard({ listing }: ListCardProps) {
     "photo-1502672260266-1c1de2d966ca",
     "photo-1598228723793-52759bba239c",
   ];
-  const imageUrl = `https://images.unsplash.com/${imageIds[imgSeed % imageIds.length]}?auto=format&fit=crop&q=80&w=800&h=600`;
+  const imageUrl = `https://images.unsplash.com/${
+    imageIds[imgSeed % imageIds.length]
+  }?auto=format&fit=crop&q=80&w=800&h=600`;
 
-  // Mocks based on description length for variety since original model lacks beds/baths
-  const beds = Math.max(1, Math.ceil(listing.description?.length / 50 || 1));
-  const baths = Math.max(1, Math.ceil(listing.description?.length / 100 || 1));
-  const sqft = listing.rentAmount * 1.5;
+  // Deterministic but "random-looking" stats based on ID or title
+  const seed =
+    (listing.id || listing._id || "default").length +
+    (listing.rentAmount % 100);
+  const beds = (seed % 4) + 1; // 1-5 beds
+  const baths = (seed % 3) + 1; // 1-4 baths
+  const sqft = 400 + ((seed * 15) % 1500); // 400-1900 sqft
+
+  const moveInDate = listing.availableFrom
+    ? formatDate(listing.availableFrom, "MMM dd")
+    : "Immediate";
 
   return (
-    <div
-      onClick={() => navigate(`/property/${listing._id || listing.id}`)}
-      className="group flex cursor-pointer flex-col gap-3"
+    <Link
+      to={`/property/${listing._id || listing.id}`}
+      aria-label={`View details for ${listing.title} in ${listing.location}`}
+      className="group flex flex-col gap-3 bg-muted p-2 rounded-md transition-all hover:bg-muted/80"
     >
       <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl bg-muted">
         <img
           src={imageUrl}
-          alt={listing.title}
+          alt={`Exterior of ${listing.title}`}
+          loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        {listing.status === "PUBLISHED" && (
-          <div className="absolute left-4 top-4">
-            <Badge
-              variant="secondary"
-              className="bg-white/95 text-black hover:bg-white backdrop-blur-sm font-medium shadow-sm"
-            >
-              Ready to move
-            </Badge>
-          </div>
-        )}
       </div>
-      <div className="space-y-1.5 px-1 relative">
-        <h3 className="text-2xl font-bold tracking-tight text-foreground">
-          {formatCurrency(listing.rentAmount)}
+      <div className="space-y-1.5 px-1 relative bg-white/65 rounded-sm p-2">
+        <h3 className="text-sm font-semibold text-foreground truncate">
+          {listing.title}
         </h3>
+        <p className="text-2xl font-bold tracking-tight text-foreground">
+          {formatCurrency(listing.rentAmount)}
+        </p>
         <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-          <MapPin className="h-4 w-4 shrink-0" />
+          <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{listing.location}</span>
         </div>
-        <div className="text-sm font-medium text-muted-foreground pt-1 flex items-center gap-1.5">
-          <span>{beds} beds</span>
-          <span className="text-muted-foreground/40">•</span>
-          <span>{baths} baths</span>
-          <span className="text-muted-foreground/40">•</span>
-          <span>{sqft.toLocaleString()} sqft</span>
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground pt-1">
+          <div className="flex gap-2">
+            <span>{beds} beds</span>
+            <span>{baths} baths</span>
+            <span>{sqft} sqft</span>
+          </div>
+          <div className="flex items-center gap-1 text-primary/80 font-bold">
+            <CalendarDays className="size-3" />
+            <span>{moveInDate}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
