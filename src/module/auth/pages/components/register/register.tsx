@@ -53,10 +53,8 @@ export default function Register() {
 
         switch (role) {
           case "OWNER":
-            navigate("/owner-tenant");
-            break;
           case "TENANT":
-            navigate("/");
+            navigate("/owner-tenant");
             break;
           case "BIGBOSS":
             navigate("/bigboss");

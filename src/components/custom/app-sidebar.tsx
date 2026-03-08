@@ -50,7 +50,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     title: "Tour Requests",
     href: "/owner-tenant",
     icon: CalendarRange,
-    roles: ["TENANT", "OWNER", "BIGBOSS"],
+    roles: ["TENANT", "OWNER"],
   },
 ];
 

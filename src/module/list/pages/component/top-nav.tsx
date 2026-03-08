@@ -105,11 +105,16 @@ export default function TopNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer font-medium"
-                  onClick={() =>
-                    navigate(
-                      `/${user?.role.toLowerCase() === "bigboss" ? "bigboss" : user?.role.toLowerCase()==="owner"?"owner-tenant":"/"}`,
-                    )
-                  }
+                  onClick={() => {
+                    const role = user?.role?.toUpperCase();
+                    if (role === "BIGBOSS") {
+                      navigate("/bigboss");
+                    } else if (role === "OWNER" || role === "TENANT") {
+                      navigate("/owner-tenant");
+                    } else {
+                      navigate("/");
+                    }
+                  }}
                 >
                   <User className="mr-2 h-4 w-4" />
                   Dashboard
