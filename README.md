@@ -1,73 +1,117 @@
-# React + TypeScript + Vite
+# Rentlo – Property Rental & Visit Management Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Rentlo is a premium property rental discovery and visit scheduling platform that connects tenants, owners, and administrators in a seamless, role-based ecosystem. Built with a focus on structured workflows and high-performance technologies, Rentlo streamlines the journey from property discovery to move-in.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🏗️ Architecture & Core Flows
 
-## React Compiler
+Rentlo is built on a modular architecture with a clear separation of concerns between the frontend and backend.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🔄 System Workflows
 
-## Expanding the ESLint configuration
+The platform is driven by strict state transitions for both property listings and user visits.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+#### Tenant Journey:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1.  **Discovery**: Search and filter properties by location, budget, and amenities.
+2.  **Engagement**: Request a physical property visit.
+3.  **Coordination**: Owners schedule sessions based on requests.
+4.  **Completion**: Visit the property → Receive decision/Approval → Move-in.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+#### Property Lifecycle:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+`DRAFT` ➔ `REVIEW` ➔ `PUBLISHED`
+
+#### Visit Lifecycle:
+
+`REQUESTED` ➔ `SCHEDULED` ➔ `VISITED` ➔ `DECISION (Approved/Rejected)`
+
+### 🖼️ Architecture References (tldraw)
+
+![System Architecture](file:///c:/notagain/rentlo-frontend/public/images/1.png)
+_Figure 1: High-level architecture, database schemas, and module interactions._
+
+![UI Components](file:///c:/notagain/rentlo-frontend/public/images/2.png)
+_Figure 2: Frontend layout design and component structure._
+
+![Visit Management Flow](file:///c:/notagain/rentlo-frontend/public/images/3.png)
+_Figure 3: Detailed visit management and owner-tenant interaction flow._
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend (`rentlo-frontend`)
+
+- **Core**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS 4, Radix UI (Headless components)
+- **State & Data**: TanStack React Query 5, Axios
+- **Forms**: React Hook Form, Zod (Schema validation)
+- **UI/UX**: Lucide React (Icons), Sonner (Toasts), Facehash (Dynamic avatars)
+- **Routing**: React Router 7
+
+### Backend (`renlo-backend`)
+
+- **Runtime**: Node.js / Bun
+- **Framework**: Express 5
+- **Database**: MongoDB with Mongoose ODM
+- **Security**: JWT (Authentication), HttpOnly Cookies, Helmet, Bcrypt
+- **Validation**: Zod
+- **Logging**: Pino
+
+---
+
+## 🚦 Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) (Recommended) or Node.js
+
+### 1. Clone & Install
+
+```bash
+# Clone the repository
+git clone <repository-url>
+
+# Install Frontend Dependencies
+cd rentlo-frontend
+bun install
+
+# Install Backend Dependencies
+cd ../renlo-backend
+bun install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Environment Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create `.env` files in both directories based on the `.env.sample` provided.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3. Run Development Servers
+
+```bash
+# Start Backend (from renlo-backend)
+bun run dev
+
+# Start Frontend (from rentlo-frontend)
+bun run dev
 ```
+
+---
+
+## 💻 Coding Practices & Principles
+
+- **Modular Design**: Code is split into logical modules (Auth, List, User, Visit) for both FE and BE.
+- **RESTful API**: Standardized responses using a custom `ApiResponse` class.
+- **RBAC (Role-Based Access Control)**: Strict route protection for `TENANT`, `OWNER`, and `BIGBOSS`.
+- **Schema-First Validation**: Every API request and form is validated using Zod schemas.
+- **Premium UI**: Focus on custom animations, glassmorphism, and responsive layouts.
+- **Express Proxy Trust**: Configured for secure cookie handling in production environments (Render/Vercel).
+
+---
+
+## 👤 User Roles
+
+- **TENANT**: Browse properties, request visits, track visit history, manage profile.
+- **OWNER**: Manage listings (Create/Edit), schedule visits, approve/reject visit requests.
+- **BIGBOSS (Admin)**: System-wide oversight, user management, and platform analytics.

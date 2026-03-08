@@ -49,7 +49,7 @@ export default function SEO({
       )}
 
       {/* Favicon / Theming */}
-      <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+      <link rel="icon" type="image/png" href="/favicon.png" />
       <meta name="theme-color" content="#2563eb" />
 
       {/* Semantic Tags / Canonical */}
