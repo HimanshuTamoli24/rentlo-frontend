@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /bigboss/
+Disallow: /owner-tenant/
+Disallow: /visits/
+
+Sitemap: https://rentlo.com/sitemap.xml

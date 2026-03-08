@@ -23,6 +23,7 @@ function AppLayout() {
         <SidebarTrigger className="md:hidden" />
         <div className="p-4">
           <Outlet />
+          <Footer />
         </div>
       </SidebarInset>
     </SidebarProvider>
@@ -31,6 +32,7 @@ function AppLayout() {
 
 import UnauthorizedPage from "./components/unauthorized-page";
 import ListDetailPage from "./module/list/pages/detail-page";
+import Footer from "./components/footer";
 
 function App() {
   return (
