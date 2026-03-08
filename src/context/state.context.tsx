@@ -47,7 +47,6 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
     return (localStorage.getItem("role") as UserRole) || null;
   });
 
-  // Keep state in sync with localStorage updates
   useEffect(() => {
     if (user) {
       if (!isAuth) setIsAuth(true);
@@ -55,7 +54,6 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("role", user.role);
     } else {
-      // If user is null but we think we are authed, check if we should clear
       if (isAuth && !localStorage.getItem("token")) {
         setIsAuth(false);
         setRole(null);
@@ -63,7 +61,6 @@ export const StateProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isAuth, role]);
 
-  // Handle logout helper
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

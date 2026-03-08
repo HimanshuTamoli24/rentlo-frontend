@@ -1,9 +1,10 @@
 import {
   Building2,
-  CalendarClock,
-  List,
   LogOut,
-  UserRound,
+  LayoutDashboard,
+  CalendarRange,
+  Users as UsersIcon,
+  Home,
 } from "lucide-react";
 
 import {
@@ -19,20 +20,27 @@ import {
 } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router";
 
-const ALL_MENU_ITEMS = [
+interface MenuItem {
+  title: string;
+  href: string;
+  icon: any;
+  roles?: string[];
+}
+
+const ALL_MENU_ITEMS: MenuItem[] = [
   {
-    title: "t",
+    title: "Browse",
     href: "/",
-    icon: UserRound,
+    icon: Home,
   },
   {
     title: "BigBoss",
     href: "/bigboss",
-    icon: UserRound,
-    roles: ["BIGBOSS"],
+    icon: LayoutDashboard,
+    roles: ["BIGBOSS", "ADMIN"],
   },
   {
-    title: "Create List",
+    title: "Create Listing",
     href: "/listings/create",
     icon: Building2,
     roles: ["OWNER", "ADMIN", "BIGBOSS"],
@@ -40,8 +48,14 @@ const ALL_MENU_ITEMS = [
   {
     title: "Users",
     href: "/users",
-    icon: UserRound,
+    icon: UsersIcon,
     roles: ["ADMIN", "BIGBOSS"],
+  },
+  {
+    title: "Tour Requests",
+    href: "/owner-tenant",
+    icon: CalendarRange,
+    roles: ["TENANT", "OWNER", "ADMIN", "BIGBOSS"],
   },
 ];
 

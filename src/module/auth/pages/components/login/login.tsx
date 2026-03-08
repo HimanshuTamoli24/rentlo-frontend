@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, UserCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/context/state.context.tsx";
@@ -27,11 +34,38 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { mutateAsync: login, isPending } = useLogin();
 
+  const demoAccounts = [
+    {
+      label: "Big boss Account",
+      email: "bb@gmail.com",
+      pass: "bb@gmail.com",
+    },
+    {
+      label: "Owner Account",
+      email: "owner@gmail.com",
+      pass: "owner@gmail.com",
+    },
+    {
+      label: "Tenant Account",
+      email: "tenant@gmail.com",
+      pass: "tenant@gmail.com",
+    },
+  ];
+
+  const handleAccountSelect = (val: string) => {
+    const acc = demoAccounts[parseInt(val)];
+    if (acc) {
+      form.setValue("email", acc.email);
+      form.setValue("password", acc.pass);
+      toast.info(`${acc.label} details filled`);
+    }
+  };
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "himanshutamoli2005@gmail.com",
-      password: "himanshutamoli2005@gmail.com",
+      email: "bb@gmail.com",
+      password: "bb@gmail.com",
     },
   });
 
@@ -75,6 +109,27 @@ export default function Login() {
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 mb-6 group transition-all hover:bg-primary/10">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-primary mb-2 block px-1">
+            Quick Fill Access
+          </label>
+          <Select onValueChange={handleAccountSelect}>
+            <SelectTrigger className="bg-white/50 border-none shadow-none focus:ring-0 h-9 w-full">
+              <div className="flex items-center gap-2">
+                <UserCircle className="size-4 text-primary" />
+                <SelectValue placeholder="Choose a demo account" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {demoAccounts.map((acc, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  {acc.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div>
           <FormField
             control={form.control}
