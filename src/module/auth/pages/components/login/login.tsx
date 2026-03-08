@@ -83,14 +83,14 @@ export default function Login() {
         if (userData?.token) {
           localStorage.setItem("token", userData.token);
         }
-
+        console.log("user ALL", res);
         setIsAuth(true);
         setRole(role);
         setUser(userData);
 
         switch (role) {
           case "OWNER":
-            navigate("/owner");
+            navigate("/owner-tenant");
             break;
           case "TENANT":
             navigate("/");

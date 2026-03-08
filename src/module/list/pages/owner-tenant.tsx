@@ -26,9 +26,19 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Home,
   MessageSquare,
+  ChevronRight,
+  Check,
+  Eye,
 } from "lucide-react";
+import img1 from "@/assets/property/1.png";
+import img2 from "@/assets/property/2.png";
+import img3 from "@/assets/property/3.png";
+import img4 from "@/assets/property/4.png";
+import img5 from "@/assets/property/5.png";
+import img6 from "@/assets/property/6.png";
+
+const propertyImages = [img1, img2, img3, img4, img5, img6];
 import { Facehash } from "facehash";
 import {
   Dialog,
@@ -54,6 +64,30 @@ import SEO from "@/components/seo";
 
 import { useSearchParams } from "react-router";
 import { confirm } from "@/components/alert-box";
+
+const VISIT_FLOW = [
+  { id: "PENDING", label: "Requested", step: 1 },
+  { id: "SCHEDULED", label: "Scheduled", step: 2 },
+  { id: "VISITED", label: "Visited", step: 3 },
+  { id: "DECISION", label: "Decision", step: 4 }, // Maps to COMPLETED/APPROVED/REJECTED
+];
+
+const getStatusStep = (status: string) => {
+  switch (status) {
+    case "PENDING":
+      return 1;
+    case "SCHEDULED":
+      return 2;
+    case "VISITED":
+      return 3;
+    case "COMPLETED":
+    case "APPROVED":
+    case "REJECTED":
+      return 4;
+    default:
+      return 1;
+  }
+};
 
 export default function OwnerTenant() {
   const { role } = useAuth();
@@ -98,16 +132,20 @@ export default function OwnerTenant() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const [searchParams] = useSearchParams();
-  const statusFilter = searchParams.get("status");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeFlowStep = searchParams.get("flow") || "Requested";
 
   const rawVisits = useMemo(() => {
     let visits = isOwner ? ownerData?.data || [] : tenantData?.data || [];
-    if (statusFilter) {
-      visits = visits.filter((v: any) => v.status === statusFilter);
+    if (activeFlowStep) {
+      visits = visits.filter((v: any) => {
+        const stepNum = getStatusStep(v.status);
+        const flowObj = VISIT_FLOW.find((f) => f.label === activeFlowStep);
+        return flowObj ? stepNum === flowObj.step : true;
+      });
     }
     return visits;
-  }, [isOwner, ownerData, tenantData, statusFilter]);
+  }, [isOwner, ownerData, tenantData, activeFlowStep]);
 
   const totalPages = Math.ceil(rawVisits.length / itemsPerPage);
   const paginatedVisits = useMemo(() => {
@@ -116,6 +154,16 @@ export default function OwnerTenant() {
       currentPage * itemsPerPage,
     );
   }, [rawVisits, currentPage, itemsPerPage]);
+
+  const hashId = (id: string) => {
+    if (!id) return 0;
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+      hash = (hash << 5) - hash + id.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  };
 
   if (isLoading) return <LoadingPage />;
   if (isError) return <ErrorPage />;
@@ -161,35 +209,122 @@ export default function OwnerTenant() {
     { color: string; label: string; icon: any }
   > = {
     PENDING: {
-      color: "bg-yellow-100 text-yellow-700",
+      color: "bg-amber-100 text-amber-700 border-amber-200",
       label: "Requested",
       icon: AlertCircle,
     },
     SCHEDULED: {
-      color: "bg-blue-100 text-blue-700",
+      color: "bg-blue-100 text-blue-700 border-blue-200",
       label: "Scheduled",
       icon: Clock,
     },
     APPROVED: {
-      color: "bg-green-100 text-green-700",
+      color: "bg-emerald-100 text-emerald-700 border-emerald-200",
       label: "Approved",
       icon: CheckCircle2,
     },
     REJECTED: {
-      color: "bg-red-100 text-red-700",
+      color: "bg-rose-100 text-rose-700 border-rose-200",
       label: "Rejected",
       icon: XCircle,
     },
     VISITED: {
-      color: "bg-indigo-100 text-indigo-700",
+      color: "bg-violet-100 text-violet-700 border-violet-200",
       label: "Visited",
-      icon: CheckCircle2,
+      icon: Eye,
     },
     COMPLETED: {
-      color: "bg-emerald-100 text-emerald-700",
+      color: "bg-emerald-100 text-emerald-700 border-emerald-200",
       label: "Completed",
       icon: CheckCircle2,
     },
+  };
+
+  const FlowFilter = () => (
+    <div className="w-full overflow-x-auto no-scrollbar py-2">
+      <div className="flex items-center min-w-max gap-1 bg-muted/30 p-1 rounded-2xl border">
+        {VISIT_FLOW.map((step, idx) => {
+          const isActive = activeFlowStep === step.label;
+          return (
+            <div key={step.label} className="flex items-center">
+              <button
+                onClick={() => {
+                  setSearchParams({ flow: step.label });
+                  setCurrentPage(1);
+                }}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                  isActive
+                    ? "bg-background shadow-sm text-primary ring-1 ring-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <div
+                  className={`size-5 rounded-full flex items-center justify-center text-[10px] ${
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {step.step}
+                </div>
+                {step.label}
+              </button>
+              {idx < VISIT_FLOW.length - 1 && (
+                <ChevronRight className="size-4 text-muted-foreground/30 mx-1" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const ProgressSteps = ({ currentStatus }: { currentStatus: string }) => {
+    const currentStep = getStatusStep(currentStatus);
+    return (
+      <div className="flex items-center justify-between w-full px-2 py-4 relative">
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -translate-y-1/2" />
+        <div
+          className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 transition-all duration-500"
+          style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+        />
+        {VISIT_FLOW.map((step) => {
+          const isCompleted = currentStep > step.step;
+          const isCurrent = currentStep === step.step;
+          return (
+            <div
+              key={step.label}
+              className="relative z-10 flex flex-col items-center gap-1.5"
+            >
+              <div
+                className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  isCompleted
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : isCurrent
+                      ? "bg-background border-primary text-primary"
+                      : "bg-background border-muted text-muted-foreground"
+                }`}
+              >
+                {isCompleted ? (
+                  <Check className="size-3 stroke-3" />
+                ) : (
+                  <span className="text-[10px] font-bold">{step.step}</span>
+                )}
+              </div>
+              <span
+                className={`text-[9px] font-bold uppercase tracking-tight ${
+                  isCurrent || isCompleted
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -208,22 +343,14 @@ export default function OwnerTenant() {
         breadcrumb="Property Services"
       />
       <MainLayout.Header>
-        <div className="flex items-center gap-4 flex-1">
-          <MainLayout.StatusFilters
-            options={[
-              "PENDING",
-              "SCHEDULED",
-              "APPROVED",
-              "REJECTED",
-              "VISITED",
-            ]}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+          <FlowFilter />
+          <MainLayout.Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
           />
         </div>
-        <MainLayout.Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
       </MainLayout.Header>
       <div className="grid grid-cols-1 gap-6">
         <div className="flex items-center justify-between mb-2">
@@ -236,10 +363,12 @@ export default function OwnerTenant() {
         {rawVisits.length === 0 ? (
           <Card className="border-dashed border-2 py-20 text-center flex flex-col items-center">
             <User className="size-12 text-muted-foreground/20 mb-4" />
-            <p className="text-muted-foreground">No active flows found.</p>
+            <p className="text-muted-foreground">
+              No visits in "{activeFlowStep}" stage.
+            </p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {paginatedVisits.map((visit: any) => {
               const status = statusConfig[visit.status] || {
                 color: "bg-gray-100 text-gray-600",
@@ -247,110 +376,141 @@ export default function OwnerTenant() {
                 icon: AlertCircle,
               };
               const StatusIcon = status.icon;
+              const imgSeed = hashId(visit.listing?._id || visit._id);
+              const imageUrl = propertyImages[imgSeed % propertyImages.length];
 
               return (
                 <Card
                   key={visit._id}
-                  className="group relative overflow-hidden border shadow-sm bg-card hover:shadow-md transition-all cursor-pointer rounded-2xl"
+                  className="group relative overflow-hidden border shadow-sm bg-card hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer rounded-[2rem]"
                   onClick={() => setDetailModal({ isOpen: true, visit })}
                 >
-                  <div className="absolute top-0 left-0 w-full h-1.5 bg-primary/20" />
-                  <div
-                    className="absolute top-0 left-0 h-1.5 bg-primary transition-all duration-500"
-                    style={{
-                      width:
-                        visit.status === "PENDING"
-                          ? "25%"
-                          : visit.status === "SCHEDULED"
-                            ? "50%"
-                            : "100%",
-                    }}
-                  />
-
-                  <CardHeader className="pb-3 flex-row items-start justify-between">
-                    <div className="space-y-1">
+                  <div className="relative aspect-4/3 overflow-hidden">
+                    <img
+                      src={imageUrl}
+                      alt="Property"
+                      className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute top-4 left-4">
                       <Badge
-                        className={`${status.color} border-none font-semibold flex items-center gap-1.5 w-fit`}
+                        className={`${status.color} border font-bold px-3 py-1 shadow-sm backdrop-blur-md bg-white/80`}
                       >
-                        <StatusIcon className="size-3" />
+                        <StatusIcon className="size-3 mr-1.5" />
                         {status.label}
                       </Badge>
-                      <CardTitle className="text-lg line-clamp-1 mt-2">
-                        {isOwner ? visit.tenant?.name : visit.listing?.title}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-xs">
-                        {isOwner ? (
-                          <>
-                            <Home className="size-3" /> {visit.listing?.title}
-                          </>
-                        ) : (
-                          <>
-                            <MapPin className="size-3" />{" "}
-                            {visit.listing?.location}
-                          </>
-                        )}
-                      </CardDescription>
                     </div>
                     {isOwner && visit.status === "PENDING" && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          asChild
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                      <div className="absolute top-4 right-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            asChild
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <MoreVertical className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              setScheduleModal({
-                                isOpen: true,
-                                visitId: visit._id,
-                              })
-                            }
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              className="size-8 rounded-full bg-white/90 shadow-sm"
+                            >
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-xl"
                           >
-                            Schedule Visit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() =>
-                              handleStatusUpdate(visit._id, "REJECTED")
-                            }
-                          >
-                            Reject Request
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuItem
+                              className="font-bold flex items-center gap-2"
+                              onClick={() =>
+                                setScheduleModal({
+                                  isOpen: true,
+                                  visitId: visit._id,
+                                })
+                              }
+                            >
+                              <Clock className="size-4 text-primary" />
+                              Schedule Visit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive font-bold flex items-center gap-2"
+                              onClick={() =>
+                                handleStatusUpdate(visit._id, "REJECTED")
+                              }
+                            >
+                              <XCircle className="size-4" />
+                              Reject Request
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     )}
+                  </div>
+
+                  <CardHeader className="pb-2">
+                    <div className="space-y-1">
+                      <CardTitle className="text-xl font-bold line-clamp-1">
+                        {visit.listing?.title}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1.5 font-medium">
+                        <MapPin className="size-3.5 text-primary" />
+                        {visit.listing?.location}
+                      </CardDescription>
+                    </div>
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                          Date Invited
-                        </span>
-                        <span className="font-semibold">
-                          {formatDate(visit.requestedDate || Date.now())}
-                        </span>
+                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30 border border-muted-foreground/5">
+                      <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <Facehash
+                          name={isOwner ? visit.tenant?.name : "Owner"}
+                          size={40}
+                        />
                       </div>
-                      <div className="h-8 w-px bg-muted-foreground/10" />
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                          Confirmed
-                        </span>
-                        <span className="font-semibold text-primary">
-                          {visit.scheduledDate
-                            ? formatTime(visit.scheduledDate)
-                            : "TBD"}
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
+                          {isOwner ? "Potential Tenant" : "Listing Owner"}
+                        </p>
+                        <p className="font-bold text-sm truncate">
+                          {isOwner ? visit.tenant?.name : "Property Manager"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
+                          Rent
+                        </p>
+                        <p className="font-black text-primary text-sm">
+                          ₹{visit.listing?.rentAmount?.toLocaleString()}
+                        </p>
                       </div>
                     </div>
+
+                    <div className="border-t pt-2 mt-4">
+                      <ProgressSteps currentStatus={visit.status} />
+                    </div>
+
+                    {visit.status === "VISITED" && (
+                      <div
+                        className="flex gap-2 pt-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Button
+                          className="flex-1 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700"
+                          onClick={() =>
+                            handleStatusUpdate(visit._id, "APPROVED")
+                          }
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1 rounded-xl font-bold"
+                          onClick={() =>
+                            handleStatusUpdate(visit._id, "REJECTED")
+                          }
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );
@@ -359,142 +519,169 @@ export default function OwnerTenant() {
         )}
       </div>
 
-      {/* Detail Modal */}
       <Dialog
         open={detailModal.isOpen}
         onOpenChange={(open) =>
           !open && setDetailModal({ isOpen: false, visit: null })
         }
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Flow Details</DialogTitle>
-            <DialogDescription>
-              Interaction details between owner and tenant.
-            </DialogDescription>
-          </DialogHeader>
-
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden border-none rounded-[2rem]">
           {detailModal.visit && (
-            <div className="space-y-6 py-4">
-              <div className="flex items-center gap-4">
-                <Facehash
-                  name={
-                    isOwner
-                      ? detailModal.visit.tenant?.name || "Tenant"
-                      : "Property Owner"
+            <div className="flex flex-col md:flex-row h-full">
+              {/* Left Side: Image + Basic Info */}
+              <div className="md:w-5/12 relative aspect-square md:aspect-auto">
+                <img
+                  src={
+                    propertyImages[
+                      hashId(
+                        detailModal.visit.listing?._id || detailModal.visit._id,
+                      ) % propertyImages.length
+                    ]
                   }
-                  size={48}
-                  className="rounded-2xl"
-                  colorClasses={["bg-primary"]}
+                  alt="Property"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div>
-                  <h4 className="font-bold text-lg">
-                    {isOwner
-                      ? detailModal.visit.tenant?.name
-                      : "Property Owner"}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {isOwner
-                      ? detailModal.visit.tenant?.email
-                      : "Details confidential"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-xl bg-muted/30 border">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                    Status
-                  </p>
-                  <p className="font-semibold flex items-center gap-1.5">
-                    <span
-                      className={`size-2 rounded-full ${statusConfig[detailModal.visit.status]?.color.split(" ")[0] || "bg-gray-400"}`}
-                    />
-                    {detailModal.visit.status}
-                  </p>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30 border">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">
-                    Meeting Time
-                  </p>
-                  <p className="font-semibold text-primary flex items-center gap-1.5">
-                    <Clock className="size-4" />
-                    {detailModal.visit.scheduledDate
-                      ? formatDate(detailModal.visit.scheduledDate, "MMM d, p")
-                      : "Not Set"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h5 className="text-sm font-bold flex items-center gap-2">
-                  <Home className="size-4 text-primary" /> Property Information
-                </h5>
-                <div className="p-4 rounded-xl border bg-card">
-                  <p className="font-semibold">
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 text-white space-y-1">
+                  <Badge
+                    className={`${statusConfig[detailModal.visit.status]?.color || "bg-white text-black"} border-none font-black px-3 py-1 mb-2`}
+                  >
+                    {statusConfig[detailModal.visit.status]?.label ||
+                      detailModal.visit.status}
+                  </Badge>
+                  <h3 className="text-2xl font-black leading-tight">
                     {detailModal.visit.listing?.title}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
+                  </h3>
+                  <p className="flex items-center gap-1.5 text-white/80 font-medium text-sm">
+                    <MapPin className="size-3.5" />
                     {detailModal.visit.listing?.location}
                   </p>
                 </div>
               </div>
 
-              {detailModal.visit.notes && (
-                <div className="space-y-2">
-                  <h5 className="text-sm font-bold">Additional Notes</h5>
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 italic text-sm">
-                    "{detailModal.visit.notes}"
+              {/* Right Side: Process Flow + Details */}
+              <div className="md:w-7/12 p-8 space-y-8 bg-background max-h-[90vh] overflow-y-auto">
+                <div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-6">
+                    Interaction Progress
+                  </h4>
+                  <div className="bg-muted/30 p-4 rounded-3xl border border-muted-foreground/5 mb-2">
+                    <ProgressSteps currentStatus={detailModal.visit.status} />
                   </div>
                 </div>
-              )}
 
-              {detailModal.visit.decision && (
-                <div
-                  className={`p-4 rounded-xl border flex items-center gap-3 ${detailModal.visit.decision === "YES" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
-                >
-                  {detailModal.visit.decision === "YES" ? (
-                    <CheckCircle2 className="size-5 text-green-600" />
-                  ) : (
-                    <XCircle className="size-5 text-red-500" />
-                  )}
-                  <div>
-                    <p className="text-xs font-bold uppercase">
-                      Final Tenant Decision
-                    </p>
-                    <p className="font-bold">
-                      {detailModal.visit.decision === "YES"
-                        ? "Accepted - Move In Request"
-                        : "Passed - Not Interested"}
-                    </p>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex items-center gap-4 p-4 rounded-3xl bg-secondary/50 border border-muted-foreground/5">
+                      <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden">
+                        <Facehash
+                          name={
+                            isOwner ? detailModal.visit.tenant?.name : "Owner"
+                          }
+                          size={48}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
+                          {isOwner ? "Potential Tenant" : "Listing Owner"}
+                        </p>
+                        <p className="font-bold text-lg truncate">
+                          {isOwner
+                            ? detailModal.visit.tenant?.name
+                            : "Property Manager"}
+                        </p>
+                        {isOwner && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {detailModal.visit.tenant?.email}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-3xl bg-muted/20 border border-muted-foreground/5">
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
+                          Requested
+                        </p>
+                        <p className="font-bold text-sm flex items-center gap-1.5">
+                          <Clock className="size-3.5 text-primary" />
+                          {formatDate(
+                            detailModal.visit.requestedDate || Date.now(),
+                          )}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-3xl bg-primary/5 border border-primary/10">
+                        <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">
+                          Meeting
+                        </p>
+                        <p className="font-black text-sm flex items-center gap-1.5 text-primary">
+                          <CheckCircle2 className="size-3.5" />
+                          {detailModal.visit.scheduledDate
+                            ? formatTime(detailModal.visit.scheduledDate)
+                            : "TBD"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
+
+                  {detailModal.visit.notes && (
+                    <div className="space-y-3">
+                      <h5 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                        Additional Notes
+                      </h5>
+                      <div className="p-5 rounded-3xl bg-background border italic text-sm text-balance shadow-inner">
+                        "{detailModal.visit.notes}"
+                      </div>
+                    </div>
+                  )}
+
+                  {detailModal.visit.status === "VISITED" && (
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        className="flex-1 rounded-2xl h-12 font-black bg-emerald-600 hover:bg-emerald-700 text-base shadow-lg shadow-emerald-500/20"
+                        onClick={() =>
+                          handleStatusUpdate(detailModal.visit._id, "APPROVED")
+                        }
+                      >
+                        Accept Deal
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="flex-1 rounded-2xl h-12 font-black text-base shadow-lg shadow-destructive/20"
+                        onClick={() =>
+                          handleStatusUpdate(detailModal.visit._id, "REJECTED")
+                        }
+                      >
+                        Reject Request
+                      </Button>
+                    </div>
+                  )}
+
+                  {isOwner && detailModal.visit?.status === "PENDING" && (
+                    <Button
+                      className="w-full h-12 rounded-2xl font-black bg-primary text-base shadow-lg shadow-primary/20"
+                      onClick={() =>
+                        setScheduleModal({
+                          isOpen: true,
+                          visitId: detailModal.visit._id,
+                        })
+                      }
+                    >
+                      Schedule Visit Now
+                    </Button>
+                  )}
                 </div>
-              )}
+
+                <Button
+                  variant="ghost"
+                  className="w-full rounded-2xl font-bold text-muted-foreground"
+                  onClick={() => setDetailModal({ isOpen: false, visit: null })}
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
             </div>
           )}
-
-          <DialogFooter className="sm:justify-start">
-            {isOwner && detailModal.visit?.status === "PENDING" && (
-              <Button
-                className="w-full bg-primary"
-                onClick={() =>
-                  setScheduleModal({
-                    isOpen: true,
-                    visitId: detailModal.visit._id,
-                  })
-                }
-              >
-                Schedule Visit Now
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setDetailModal({ isOpen: false, visit: null })}
-            >
-              Close Details
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 

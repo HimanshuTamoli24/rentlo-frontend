@@ -37,25 +37,20 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     title: "BigBoss",
     href: "/bigboss",
     icon: LayoutDashboard,
-    roles: ["BIGBOSS", "ADMIN"],
+    roles: ["BIGBOSS"],
   },
-  {
-    title: "Create Listing",
-    href: "/listings/create",
-    icon: Building2,
-    roles: ["OWNER", "ADMIN", "BIGBOSS"],
-  },
+
   {
     title: "Users",
     href: "/users",
     icon: UsersIcon,
-    roles: ["ADMIN", "BIGBOSS"],
+    roles: [ "BIGBOSS"],
   },
   {
     title: "Tour Requests",
     href: "/owner-tenant",
     icon: CalendarRange,
-    roles: ["TENANT", "OWNER", "ADMIN", "BIGBOSS"],
+    roles: ["TENANT", "OWNER", "BIGBOSS"],
   },
 ];
 
@@ -79,7 +74,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild className="md:justify-center">
+          <SidebarMenuButton size="lg" asChild className="md:justify-center">
               <Link to="/">
                 <Building2 className="size-10" />
                 <span className="md:hidden">Rentlo</span>

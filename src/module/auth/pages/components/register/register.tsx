@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/context/state.context.tsx";
 import { useState } from "react";
 
 const formSchema = z.object({
@@ -26,6 +27,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { mutateAsync: registerFn, isPending } = useRegister();
+  const { setUser, setRole, setIsAuth } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -35,8 +37,34 @@ export default function Register() {
   const onSubmit = async (data: any) => {
     await toast.promise(registerFn(data), {
       loading: "Registering...",
-      success: () => {
-        navigate("/");
+      success: (res) => {
+        const userData = res?.data || res;
+        const role = userData?.role || "TENANT";
+
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("role", role);
+        if (userData?.token) {
+          localStorage.setItem("token", userData.token);
+        }
+
+        setIsAuth(true);
+        setRole(role);
+        setUser(userData);
+
+        switch (role) {
+          case "OWNER":
+            navigate("/owner-tenant");
+            break;
+          case "TENANT":
+            navigate("/");
+            break;
+          case "BIGBOSS":
+            navigate("/bigboss");
+            break;
+          default:
+            navigate("/");
+        }
+
         return "Registration successful!";
       },
       error: "Registration failed. Please try again.",
