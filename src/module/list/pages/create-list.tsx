@@ -116,44 +116,43 @@ export default function CreateList() {
         {/* FORM */}
         <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Card>
+            <Card className="bg-accent/30">
               <CardHeader>
                 <CardTitle>Property Details</CardTitle>
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {/* TITLE */}
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="2BHK near metro" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-4 bg-muted p-2 rounded-sm">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="2BHK near metro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* DESCRIPTION */}
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel required>Description</FormLabel>
-                      <FormControl>
-                        <Textarea rows={4} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel required>Description</FormLabel>
+                        <FormControl>
+                          <Textarea rows={4} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 {/* GRID */}
-                <div className="grid gap-4 md:grid-cols-3 w-full">
+                <div className="grid gap-4 md:grid-cols-3 w-full bg-muted p-2 rounded-sm ">
                   <FormField
                     control={form.control}
                     name="location"
@@ -225,8 +224,8 @@ export default function CreateList() {
                   />
                 </div>
 
-                {/* AMENITIES */}
-                <FormField
+             <div className="bg-muted rounded-sm p-2">
+                 <FormField
                   control={form.control}
                   name="amenitiesInput"
                   render={({ field }) => (
@@ -237,7 +236,6 @@ export default function CreateList() {
                   )}
                 />
 
-                {/* RULES */}
                 <FormField
                   control={form.control}
                   name="rulesInput"
@@ -248,6 +246,7 @@ export default function CreateList() {
                     </FormItem>
                   )}
                 />
+             </div>
               </CardContent>
             </Card>
 

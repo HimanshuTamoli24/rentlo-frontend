@@ -17,29 +17,27 @@ import {
 import { Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { formatCurrency } from "@/utils/format-currency";
+import { Card } from "@/components/ui/card";
+import { Sparkles, ChevronRight } from "lucide-react";
+
+import { useSearchParams } from "react-router";
+import MainLayout from "@/components/main-layout";
+import { Button } from "@/components/ui/button";
 
 export default function ListPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [priceRange, setPriceRange] = useState([69000]);
-  const [moveInOption, setMoveInOption] = useState("1day");
-  const [locationCode, setLocationCode] = useState<string | undefined>(
-    undefined,
-  );
-
-  // Debounce search term to avoid excessive API calls
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("search") || "";
+  const rentAmount = Number(searchParams.get("rentAmount")) || 500000;
+  const moveIn = searchParams.get("moveIn") || "1day";
+  const location = searchParams.get("location") || undefined;
+  const page = Number(searchParams.get("page")) || 1;
 
   const { data, isLoading, isError } = useLists({
-    search: debouncedSearch,
-    rentAmount: priceRange[0],
-    moveIn: moveInOption,
-    location: locationCode,
+    search,
+    rentAmount,
+    moveIn,
+    location,
+    page,
   });
 
   const lists: ListingCardData[] = data?.data || [];
@@ -57,99 +55,150 @@ export default function ListPage() {
     })),
   };
 
+  const totalPages = data?.totalPages || 1;
+
+  const updateParam = (key: string, value: string | undefined) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set(key, value);
+    else params.delete(key);
+    params.set("page", "1"); // Reset to page 1 on filter change
+    setSearchParams(params);
+  };
+
   return (
-    <div className="flex  flex-col bg-background font-sans min-h-screen">
+    <MainLayout>
       <SEO
         title="Find Your Perfect Home"
         description="Browse our curated list of apartments, houses, and luxury villas. Filter by price, location, and move-in availability."
         schema={listSchema}
       />
-      <TopNav />
+      <MainLayout.Title
+        title="Find Your Perfect Home"
+        description="Browse our curated list of apartments, houses, and luxury villas. Filter by price, location, and move-in availability."
+      />
 
-      <main className="flex-1 px-4 py-8 md:px-8 max-w-[1600px] mx-auto w-full">
+      <MainLayout.Header className="mt-4">
+        <div className="flex items-center gap-4 flex-1">
+          <MainLayout.Search placeholder="Search area, building, or city..." />
+        </div>
+        <MainLayout.Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={(p) => {
+            const params = new URLSearchParams(searchParams);
+            params.set("page", p.toString());
+            setSearchParams(params);
+          }}
+        />
+      </MainLayout.Header>
+
+      <main className="mt-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Side: Sidebar Filters */}
-          <aside className="w-full lg:w-[320px] shrink-0 space-y-8 rounded-2xl border bg-card p-6 shadow-sm h-fit sticky top-24">
-            {/* INPUT SEARCH */}
-            <div className="space-y-3">
-              <label className="text-sm font-semibold tracking-wider text-muted-foreground">
-                Search Appartment, house
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Episiten Island "
-                  className="pl-9 h-11"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+          <aside className="w-full lg:w-[300px] shrink-0 space-y-6">
+            <Card className="p-6 border shadow-sm rounded-2xl bg-card">
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-foreground">
+                      Price Range
+                    </label>
+                    <span className="text-xs font-mono text-primary font-bold">
+                      {formatCurrency(rentAmount)}
+                    </span>
+                  </div>
+                  <Slider
+                    defaultValue={[500000]}
+                    max={500000}
+                    step={1000}
+                    value={[rentAmount]}
+                    onValueChange={(val) =>
+                      updateParam("rentAmount", val[0].toString())
+                    }
+                  />
+                </div>
+
+                <div className="space-y-3 pt-4 border-t">
+                  <label className="text-sm font-bold text-foreground">
+                    Availability
+                  </label>
+                  <Tabs
+                    value={moveIn}
+                    onValueChange={(val) => updateParam("moveIn", val)}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                      <TabsTrigger value="1day" className="text-xs">
+                        1 Day
+                      </TabsTrigger>
+                      <TabsTrigger value="7day" className="text-xs">
+                        7 Days
+                      </TabsTrigger>
+                      <TabsTrigger value="15day" className="text-xs">
+                        15 Days
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t">
+                  <label className="text-sm font-bold text-foreground">
+                    Preferred Location
+                  </label>
+                  <Select
+                    value={location}
+                    onValueChange={(val) =>
+                      updateParam("location", val === "all" ? undefined : val)
+                    }
+                  >
+                    <SelectTrigger className="w-full bg-muted/30 border-none shadow-none focus:ring-1">
+                      <SelectValue placeholder="All Locations" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="epsteinisland">
+                        Epstein Island
+                      </SelectItem>
+                      <SelectItem value="jaipur">Jaipur</SelectItem>
+                      <SelectItem value="patiala">Patiala</SelectItem>
+                      <SelectItem value="chaicode">Chaicode HQ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </Card>
 
-            {/* PROGRESS BAR (SLIDER) */}
-            <div className="space-y-4 pt-4 border-t">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Progress Bar (Price)
-                </label>
-                <span className="text-sm font-medium">
-                  {" "}
-                  {formatCurrency(0)} -{formatCurrency(priceRange[0])}
-                </span>
+            <div className="group relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/20 via-primary/5 to-transparent p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 border border-primary/20">
+              <div className="absolute -right-8 -bottom-8 size-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors" />
+              <div className="relative space-y-4">
+             
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">
+                    Certified Expert
+                  </h4>
+                  <p className="text-[14px] text-foreground font-bold leading-tight italic">
+                    "Still can't decide? Let's build your vision together. I'm
+                    just one click away."
+                  </p>
+                </div>
+                <Button
+                  className="w-full rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-md shadow-primary/20"
+                  asChild
+                >
+                  <a
+                    href="https://github.com/HimanshuTamoli24"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    Hire the Developer
+                  </a>
+                </Button>
               </div>
-              <Slider
-                defaultValue={[69000]}
-                max={500000}
-                step={1000}
-                value={priceRange}
-                onValueChange={setPriceRange}
-                className="mt-2"
-              />
-            </div>
-
-            {/* MOVE IN DATE OPTION / TABS */}
-            <div className="space-y-3 pt-4 border-t">
-              <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Move In Date Option
-              </label>
-              <Tabs
-                value={moveInOption}
-                onValueChange={setMoveInOption}
-                className="w-full"
-              >
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="1day">1 D</TabsTrigger>
-                  <TabsTrigger value="7day">7 D</TabsTrigger>
-                  <TabsTrigger value="15day">15 D</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {/* LOCATION SELECT */}
-            <div className="space-y-3 pt-4 border-t">
-              <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Location Select
-              </label>
-              <Select value={locationCode} onValueChange={setLocationCode}>
-                <SelectTrigger className="w-full h-11">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="epsteinisland">Epstein island</SelectItem>
-                  <SelectItem value="jaipur">Jaipur </SelectItem>
-                  <SelectItem value="patiala">Patiala </SelectItem>
-                  <SelectItem value="chaicode">Chaicode HeadQuater</SelectItem>
-                  <SelectItem value="more">
-                    More option buy our 69dollar plan :)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </aside>
 
           {/* Right Side: Property List Area */}
           <div className="flex-1 w-full min-w-0">
-       
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {isError ? (
                 <div className="col-span-full rounded-2xl border border-red-200 bg-red-50 p-12 text-center text-red-600 shadow-sm">
@@ -184,6 +233,6 @@ export default function ListPage() {
           </div>
         </div>
       </main>
-    </div>
+    </MainLayout>
   );
 }

@@ -16,7 +16,13 @@ export function BigBossRoutes() {
 export function OwnerTenantRoutes() {
   return (
     <Routes>
-      <Route element={<ProtectedRoutes allowedRoles={["OWNER", "TENANT"]} />}>
+      <Route
+        element={
+          <ProtectedRoutes
+            allowedRoles={["ADMIN", "BIGBOSS", "OWNER", "TENANT"]}
+          />
+        }
+      >
         <Route index element={<OwnerTenant />} />
       </Route>
     </Routes>

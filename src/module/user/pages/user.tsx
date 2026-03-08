@@ -8,20 +8,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import LoadingPage from "@/components/loading";
-import ErrorPage from "@/components/error-page";
 import { format } from "date-fns";
-import { User, ShieldCheck, UserCog, Ghost } from "lucide-react";
+import { User, ShieldCheck, UserCog, Ghost, UserPlus } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router";
+import SEO from "@/components/seo";
+import { Button } from "@/components/ui/button";
 
 export default function UserPage() {
   const { data, isLoading, isError } = useUsers();
-
-  if (isLoading) return <LoadingPage />;
-  if (isError) return <ErrorPage />;
+  const [searchParams] = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const users = data?.data || [];
+
+  const filteredUsers = useMemo(() => {
+    const search = searchParams.get("search")?.toLowerCase() || "";
+    if (!search) return users;
+    return users.filter(
+      (u: any) =>
+        u.name?.toLowerCase().includes(search) ||
+        u.email?.toLowerCase().includes(search) ||
+        u.role?.toLowerCase().includes(search),
+    );
+  }, [users, searchParams]);
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = useMemo(() => {
+    return filteredUsers.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    );
+  }, [filteredUsers, currentPage]);
+
+  if (isLoading) return <MainLayout.Loading />;
+  if (isError) return <MainLayout.Error />;
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -49,77 +73,106 @@ export default function UserPage() {
   };
 
   return (
-    <MainLayout
-      title="User Management"
-      description="View and manage all registered users in the platform."
-    >
-      <Card className="border-none shadow-xl bg-card/50 backdrop-blur-sm overflow-hidden">
-        <CardHeader className="border-b bg-muted/30">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <User className="size-5 text-primary" />
-              Users ({users.length})
-            </CardTitle>
-          </div>
-        </CardHeader>
+    <MainLayout>
+      <SEO
+        title="Account Central"
+        description="Monitor platform users, manage permissions and track new registrations."
+      />
+
+      <MainLayout.Title
+        title="User Management"
+        description={`Found ${filteredUsers.length} total active accounts on the platform.`}
+        actions={
+          <Button className="gap-2 font-bold text-white rounded-xl">
+            <UserPlus className="size-4" />
+            Add User
+          </Button>
+        }
+      />
+
+      <MainLayout.Header className="mt-4">
+        <MainLayout.Search placeholder="Filter by name, email or role..." />
+        <MainLayout.Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </MainLayout.Header>
+
+      <Card className="border shadow-sm rounded-xl overflow-hidden mt-2 bg-card">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/20 hover:bg-muted/20">
-                <TableHead className="px-6 h-12 font-bold text-foreground">
-                  Name
-                </TableHead>
-                <TableHead className="h-12 font-bold text-foreground">
-                  Email
-                </TableHead>
-                <TableHead className="h-12 font-bold text-foreground">
-                  Role
-                </TableHead>
-                <TableHead className="h-12 font-bold text-foreground">
-                  Joined On
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-48 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Ghost className="size-10 opacity-20" />
-                      <p>No users found.</p>
-                    </div>
-                  </TableCell>
+          <div className="w-full overflow-x-auto">
+            <Table className="table-fixed w-full">
+              <TableHeader className="bg-muted/30">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-6 font-bold py-4 text-muted-foreground w-[300px]">
+                    User Identity
+                  </TableHead>
+                  <TableHead className="font-bold py-4 text-muted-foreground w-[250px]">
+                    Email Address
+                  </TableHead>
+                  <TableHead className="font-bold py-4 text-muted-foreground w-[150px]">
+                    Access Level
+                  </TableHead>
+                  <TableHead className="px-6 text-right font-bold py-4 text-muted-foreground w-[180px]">
+                    Registration Date
+                  </TableHead>
                 </TableRow>
-              ) : (
-                users.map((user: any) => (
-                  <TableRow
-                    key={user._id}
-                    className="group transition-colors hover:bg-muted/30"
-                  >
-                    <TableCell className="px-6 py-4 font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                          {user.name?.charAt(0).toUpperCase() || "U"}
-                        </div>
-                        {user.name}
+              </TableHeader>
+              <TableBody>
+                {paginatedUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-64 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                        <Ghost className="size-12 opacity-10 animate-bounce" />
+                        <h3 className="text-lg font-semibold text-foreground">
+                          No Users Detected
+                        </h3>
+                        <p className="max-w-[200px] text-sm">
+                          We couldn't find any users matching your current
+                          criteria.
+                        </p>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 text-muted-foreground">
-                      {user.email}
-                    </TableCell>
-                    <TableCell className="py-4">
-                      {getRoleBadge(user.role)}
-                    </TableCell>
-                    <TableCell className="py-4 text-muted-foreground text-sm">
-                      {user.createdAt
-                        ? format(new Date(user.createdAt), "PPP")
-                        : "N/A"}
-                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  paginatedUsers.map((user: any) => (
+                    <TableRow
+                      key={user._id}
+                      className="group transition-colors hover:bg-muted/50"
+                    >
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="size-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black text-sm shadow-sm">
+                            {user.name?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground leading-tight">
+                              {user.name}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black mt-0.5">
+                              ID: {user._id?.slice(-8)}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-4 font-medium text-muted-foreground">
+                        {user.email}
+                      </TableCell>
+                      <TableCell className="py-4">
+                        {getRoleBadge(user.role)}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right text-muted-foreground tabular-nums font-medium">
+                        {user.createdAt
+                          ? format(new Date(user.createdAt), "MMM d, yyyy")
+                          : "Legacy Account"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </MainLayout>

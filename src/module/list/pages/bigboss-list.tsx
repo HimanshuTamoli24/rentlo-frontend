@@ -195,19 +195,11 @@ export default function BigBossListPage() {
             isLimit={false}
           />
         </MainLayout.Header>
-        <Card className="border shadow-sm rounded-xl overflow-hidden mt-2">
-          <CardHeader className="bg-card px-6 py-4 flex flex-row items-center justify-between border-b">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-muted-foreground">
-                {filteredListings.length} Results{" "}
-                {statusFilter && `(${statusFilter})`}
-              </span>
-            </div>
-          </CardHeader>
+        <Card className="border shadow-sm rounded-xl  h-fit overflow-hidden  bg -card">
           <CardContent className="p-0">
             <div className="w-full overflow-x-auto">
               <Table className="table-fixed w-full">
-                <TableHeader className="bg-card">
+                <TableHeader className="bg-muted">
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="px-6 font-semibold text-muted-foreground w-[350px]">
                       Property

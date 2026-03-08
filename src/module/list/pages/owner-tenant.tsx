@@ -51,9 +51,11 @@ import {
 import { useAuth } from "@/context/state.context.tsx";
 import SEO from "@/components/seo";
 
+import { useSearchParams } from "react-router";
+
 export default function OwnerTenant() {
   const { role } = useAuth();
-  const isOwner = role === "OWNER" || role === "BIGBOSS";
+  const isOwner = role === "OWNER" || role === "BIGBOSS" || role === "ADMIN";
 
   const {
     data: tenantData,
@@ -94,9 +96,16 @@ export default function OwnerTenant() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const [searchParams] = useSearchParams();
+  const statusFilter = searchParams.get("status");
+
   const rawVisits = useMemo(() => {
-    return isOwner ? ownerData?.data || [] : tenantData?.data || [];
-  }, [isOwner, ownerData, tenantData]);
+    let visits = isOwner ? ownerData?.data || [] : tenantData?.data || [];
+    if (statusFilter) {
+      visits = visits.filter((v: any) => v.status === statusFilter);
+    }
+    return visits;
+  }, [isOwner, ownerData, tenantData, statusFilter]);
 
   const totalPages = Math.ceil(rawVisits.length / itemsPerPage);
   const paginatedVisits = useMemo(() => {
@@ -159,9 +168,14 @@ export default function OwnerTenant() {
       icon: XCircle,
     },
     VISITED: {
-      color: "bg-purple-100 text-purple-700",
+      color: "bg-indigo-100 text-indigo-700",
       label: "Visited",
-      icon: History,
+      icon: CheckCircle2,
+    },
+    COMPLETED: {
+      color: "bg-emerald-100 text-emerald-700",
+      label: "Completed",
+      icon: CheckCircle2,
     },
   };
 
@@ -181,7 +195,17 @@ export default function OwnerTenant() {
         breadcrumb="Property Services"
       />
       <MainLayout.Header>
-        <div /> {/* Placeholder for filters if needed later */}
+        <div className="flex items-center gap-4 flex-1">
+          <MainLayout.StatusFilters
+            options={[
+              "PENDING",
+              "SCHEDULED",
+              "APPROVED",
+              "REJECTED",
+              "VISITED",
+            ]}
+          />
+        </div>
         <MainLayout.Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -214,10 +238,21 @@ export default function OwnerTenant() {
               return (
                 <Card
                   key={visit._id}
-                  className="group relative overflow-hidden border-none shadow-xl bg-card/60 backdrop-blur-md transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
+                  className="group relative overflow-hidden border shadow-sm bg-card hover:shadow-md transition-all cursor-pointer rounded-2xl"
                   onClick={() => setDetailModal({ isOpen: true, visit })}
                 >
-                  <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-primary/20" />
+                  <div
+                    className="absolute top-0 left-0 h-1.5 bg-primary transition-all duration-500"
+                    style={{
+                      width:
+                        visit.status === "PENDING"
+                          ? "25%"
+                          : visit.status === "SCHEDULED"
+                            ? "50%"
+                            : "100%",
+                    }}
+                  />
 
                   <CardHeader className="pb-3 flex-row items-start justify-between">
                     <div className="space-y-1">

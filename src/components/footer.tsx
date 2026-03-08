@@ -21,7 +21,7 @@ export default function Footer() {
               beautiful and intuitive interface. Simplified property management
               for everyone.
             </p>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <a
                 href="https://github.com/HimanshuTamoli24/rentlo-frontend"
                 target="_blank"
@@ -42,7 +42,7 @@ export default function Footer() {
               >
                 <Linkedin className="size-5" />
               </a>
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Links */}
@@ -66,6 +66,15 @@ export default function Footer() {
                   className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                 >
                   Backend Repo
+                  <span className="w-0 group-hover:w-4 h-px bg-primary transition-all duration-300" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.amazon.in/Mom-Says-Girlfriend-Subhasis-Das/dp/8129117037"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                >
+                  My Girl friend
                   <span className="w-0 group-hover:w-4 h-px bg-primary transition-all duration-300" />
                 </a>
               </li>
