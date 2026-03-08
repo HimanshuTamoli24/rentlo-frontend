@@ -25,7 +25,7 @@ import { useCreateList } from "../hooks/list-hook";
 import MainLayout from "@/components/main-layout";
 import ListCard from "./component/list-card";
 import SEO from "@/components/seo";
-
+import { confirm } from "@/components/alert-box";
 
 const listingStatus = ["DRAFT", "APPROVED", "REJECTED"] as const;
 
@@ -78,6 +78,14 @@ export default function CreateList() {
       availableFrom: new Date(values.availableFrom).toISOString(),
       status: values.status,
     };
+
+    const ok = await confirm.create({
+      title: "Create Listing",
+      message: "Are you sure you want to create this listing?",
+      confirmText: "Create",
+      cancelText: "Cancel",
+    });
+    if (!ok) return;
 
     await toast.promise(createList(payload), {
       loading: "Creating listing...",

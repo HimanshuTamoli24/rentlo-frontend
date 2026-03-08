@@ -22,7 +22,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, Plus } from "lucide-react";
+import { AlertCircle, Check, Plus, X } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +42,7 @@ import {
 import { toast } from "sonner";
 import MainLayout from "@/components/main-layout";
 import SEO from "@/components/seo";
+import { confirm } from "@/components/alert-box";
 
 export default function BigBossListPage() {
   const navigate = useNavigate();
@@ -97,6 +98,13 @@ export default function BigBossListPage() {
 
   const handleAccept = async (id: string) => {
     try {
+      const ok = await confirm.update({
+        title: "Accept Listing",
+        message: "Are you sure you want to accept this listing?",
+        confirmText: "Accept",
+      });
+      if (!ok) return;
+
       await acceptListing(id);
       toast.success("Listing approved successfully");
     } catch (err) {
@@ -118,6 +126,13 @@ export default function BigBossListPage() {
     }
 
     try {
+      const ok = await confirm.warning({
+        title: "Reject Listing",
+        message: "Are you sure you want to reject this listing?",
+        confirmText: "Reject Listing",
+      });
+      if (!ok) return;
+
       await rejectListing({
         listId: selectedListingId,
         payload: { reason: rejectReason },
@@ -283,25 +298,25 @@ export default function BigBossListPage() {
                             <div className="flex justify-end gap-2">
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="border-green-300 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800"
+                                variant="secondary"
+                                className=" hover:scale-110 transition-all duration-200 hover:bg-primary/10"
                                 onClick={() => handleAccept(id)}
                                 disabled={
                                   isAccepting || listing.status !== "DRAFT"
                                 }
                               >
-                                Accept
+                                <Check />
                               </Button>
                               <Button
                                 size="sm"
-                                variant="outline"
-                                className="border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700"
+                                variant="secondary"
+                                className="border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 hover:scale-110 transition-all duration-200 "
                                 onClick={() => openRejectModal(id)}
                                 disabled={
                                   isRejecting || listing.status !== "DRAFT"
                                 }
                               >
-                                Reject
+                                <X />
                               </Button>
                             </div>
                           </TableCell>

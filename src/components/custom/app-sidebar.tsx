@@ -60,10 +60,13 @@ const ALL_MENU_ITEMS: MenuItem[] = [
 ];
 
 import { useAuth } from "@/context/state.context.tsx";
+import { useLogout } from "@/module/auth/hooks/use-auth";
+import { confirm } from "@/components/alert-box";
 
 export function AppSidebar() {
   const location = useLocation();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
+  const { mutateAsync: logout } = useLogout();
 
   const normalizedRole = (role || "").toUpperCase();
 
@@ -78,7 +81,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="md:justify-center">
               <Link to="/">
-                <Building2 className="size-4" />
+                <Building2 className="size-10" />
                 <span className="md:hidden">Rentlo</span>
               </Link>
             </SidebarMenuButton>
@@ -112,13 +115,18 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
               className="md:justify-center text-red-500 hover:text-red-600"
+              onClick={async () => {
+                if (user) {
+                  const ok = await confirm.warning({
+                    message: "Are you sure you want to log out?",
+                  });
+                  if (ok) logout(user);
+                }
+              }}
             >
-              <Link to="/">
-                <LogOut />
-                <span className="md:hidden">Logout</span>
-              </Link>
+              <LogOut />
+              <span className="md:hidden">Logout</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

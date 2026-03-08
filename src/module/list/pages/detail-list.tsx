@@ -28,6 +28,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/utils/format-date";
 import { formatCurrency } from "@/utils/format-currency";
 import { cn } from "@/lib/utils";
+import { confirm } from "@/components/alert-box";
+
+import { Facehash } from "facehash";
+import image1 from "@/assets/property/1.png";
+import image2 from "@/assets/property/2.png";
+import image3 from "@/assets/property/3.png";
+import image4 from "@/assets/property/4.png";
+import image5 from "@/assets/property/5.png";
+import image6 from "@/assets/property/6.png";
+
+const propertyImages = [image1, image2, image3, image4, image5, image6];
 
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +50,7 @@ export default function ListDetailPage() {
   const [visitModal, setVisitModal] = useState(false);
   const [notes, setNotes] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   if (isLoading) return <LoadingPage />;
   if (isError || !data?.data) return <ErrorPage />;
@@ -52,6 +64,13 @@ export default function ListDetailPage() {
       navigate("/auth");
       return;
     }
+
+    const ok = await confirm.create({
+      title: "Request Visit",
+      message: "Are you sure you want to request a visit for this property?",
+      confirmText: "Request Tour",
+    });
+    if (!ok) return;
 
     await requestVisit({
       listingId: listing._id || listing.id,
@@ -68,8 +87,7 @@ export default function ListDetailPage() {
     "@type": "Accommodation",
     name: listing.title,
     description: listing.description,
-    image:
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2000",
+    image: propertyImages[(listing.rentAmount || 0) % propertyImages.length],
     address: {
       "@type": "PostalAddress",
       addressLocality: listing.location,
@@ -105,12 +123,25 @@ export default function ListDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Main Visual Content */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="aspect-video w-full rounded-3xl overflow-hidden bg-muted relative">
-              <img
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2000"
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
+            <div className="aspect-video w-full rounded-3xl overflow-hidden bg-muted relative flex items-center justify-center">
+              {imgError ? (
+                <Facehash
+                  name={listing.title + (listing._id || listing.id || "")}
+                  size={600}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src={
+                    propertyImages[
+                      (listing.rentAmount || 0) % propertyImages.length
+                    ]
+                  }
+                  alt={listing.title}
+                  onError={() => setImgError(true)}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             <div>

@@ -168,7 +168,7 @@ function MainLayoutHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-3",
+        "flex flex-col gap-4 md:flex-row md:items-center md:justify-between  pb-3",
         className,
       )}
     >
@@ -204,7 +204,7 @@ function MainLayoutStatusFilters({
       <Button
         size="sm"
         className="h-8 rounded-md text-xs font-bold"
-        variant={status === null ? "outline" : "ghost"}
+        variant={status === null ? "default" : "ghost"}
         onClick={handleClearStatus}
       >
         All
@@ -214,8 +214,8 @@ function MainLayoutStatusFilters({
         <Button
           key={item}
           size="sm"
-          className="h-8 rounded-md text-xs font-bold"
-          variant={status === item ? "outline" : "ghost"}
+          className="h-8  rounded-md text-xs font-bold"
+          variant={status === item ? "default" : "ghost"}
           onClick={() => handleFilterChange(item)}
         >
           {item.charAt(0).toUpperCase() + item.slice(1)}
