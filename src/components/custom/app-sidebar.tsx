@@ -5,6 +5,7 @@ import {
   CalendarRange,
   Users as UsersIcon,
   Home,
+  Plus,
 } from "lucide-react";
 
 import {
@@ -39,12 +40,17 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     icon: LayoutDashboard,
     roles: ["BIGBOSS"],
   },
-
+  {
+    title: "Create Listing",
+    href: "/listings/create",
+    icon: Plus,
+    roles: ["BIGBOSS", "OWNER"],
+  },
   {
     title: "Users",
     href: "/users",
     icon: UsersIcon,
-    roles: [ "BIGBOSS"],
+    roles: ["BIGBOSS"],
   },
   {
     title: "Tour Requests",
@@ -74,7 +80,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-          <SidebarMenuButton size="lg" asChild className="md:justify-center">
+            <SidebarMenuButton size="lg" asChild className="md:justify-center">
               <Link to="/">
                 <Building2 className="size-10" />
                 <span className="md:hidden">Rentlo</span>
@@ -88,20 +94,27 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="md:hidden">Main Menu</SidebarGroupLabel>
           <SidebarMenu>
-            {menuItems.map((item) => (
-              <SidebarMenuItem className="flex gap-0.5" key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={item.title}
-                  className={`${location.pathname === item.href ? "bg-primary  hover:bg-primary/90" : ""} md:justify-center`}
-                >
-                  <Link to={item.href}>
-                    <item.icon />
-                    <span className="md:hidden">{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+            {menuItems.map((item) => {
+              const isCreate = item.title === "Create Listing";
+              return (
+                <SidebarMenuItem className="flex gap-0.5" key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    className={`
+                      ${location.pathname === item.href ? "bg-primary text-white hover:bg-primary/90 shadow-md" : ""} 
+                      ${isCreate ? "scale-110 mx-auto rounded-full bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:rotate-90 hover:scale-125 active:scale-95 my-2" : ""}
+                      md:justify-center
+                    `}
+                  >
+                    <Link to={item.href}>
+                      <item.icon className={isCreate ? "size-5" : ""} />
+                      <span className="md:hidden font-bold">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
