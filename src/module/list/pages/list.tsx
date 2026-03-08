@@ -1,10 +1,7 @@
 import { useLists } from "../hooks/list-hook";
 import ListCard, { type ListingCardData } from "./component/list-card";
-import TopNav from "./component/top-nav";
-import Footer from "@/components/footer";
 import SEO from "@/components/seo";
 import ListSkeleton from "./component/list-skeleton";
-import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,10 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import { useState, useEffect } from "react";
 import { formatCurrency } from "@/utils/format-currency";
 import { Card } from "@/components/ui/card";
-import { Sparkles, ChevronRight } from "lucide-react";
 
 import { useSearchParams } from "react-router";
 import MainLayout from "@/components/main-layout";
@@ -171,7 +166,6 @@ export default function ListPage() {
             <div className="group relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/20 via-primary/5 to-transparent p-6 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 border border-primary/20">
               <div className="absolute -right-8 -bottom-8 size-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-colors" />
               <div className="relative space-y-4">
-             
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">
                     Certified Expert

@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import { Link } from "react-router";
 import { formatCurrency } from "@/utils/format-currency";

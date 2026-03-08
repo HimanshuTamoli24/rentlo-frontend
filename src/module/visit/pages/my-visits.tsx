@@ -166,19 +166,23 @@ export default function MyVisitsPage() {
   };
 
   return (
-    <MainLayout
-      title={isOwner ? "Visit Requests" : "My Scheduled Visits"}
-      description={
-        isOwner
-          ? "Manage incoming visit requests from potential tenants."
-          : "Track your upcoming property tours and viewing history."
-      }
-      pagination={{
-        currentPage,
-        totalPages,
-        onPageChange: setCurrentPage,
-      }}
-    >
+    <MainLayout>
+      <MainLayout.Title
+        title={isOwner ? "Visit Requests" : "My Scheduled Visits"}
+        description={
+          isOwner
+            ? "Manage incoming visit requests from potential tenants."
+            : "Track your upcoming property tours and viewing history."
+        }
+      />
+      <MainLayout.Header className="mt-4">
+        <div /> {/* Spacer */}
+        <MainLayout.Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </MainLayout.Header>
       <div className="flex flex-col gap-6">
         {rawVisits.length === 0 ? (
           <Card className="border-dashed border-2 py-20 flex flex-col items-center justify-center text-center">

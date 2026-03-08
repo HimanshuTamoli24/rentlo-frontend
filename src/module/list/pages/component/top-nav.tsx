@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/context/state.context.tsx";
 

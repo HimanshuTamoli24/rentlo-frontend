@@ -11,11 +11,10 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { User, ShieldCheck, UserCog, Ghost, UserPlus } from "lucide-react";
+import { User, ShieldCheck, UserCog, Ghost } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router";
 import SEO from "@/components/seo";
-import { Button } from "@/components/ui/button";
 
 export default function UserPage() {
   const { data, isLoading, isError } = useUsers();
@@ -82,12 +81,6 @@ export default function UserPage() {
       <MainLayout.Title
         title="User Management"
         description={`Found ${filteredUsers.length} total active accounts on the platform.`}
-        actions={
-          <Button className="gap-2 font-bold text-white rounded-xl">
-            <UserPlus className="size-4" />
-            Add User
-          </Button>
-        }
       />
 
       <MainLayout.Header className="mt-4">

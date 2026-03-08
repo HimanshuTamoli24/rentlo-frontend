@@ -1,15 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,17 +24,8 @@ import { z } from "zod";
 import { useCreateList } from "../hooks/list-hook";
 import MainLayout from "@/components/main-layout";
 import ListCard from "./component/list-card";
-import { Separator } from "@/components/ui/separator";
 import SEO from "@/components/seo";
-import {
-  Sparkles,
-  Home,
-  MapPin,
-  DollarSign,
-  Calendar,
-  ListChecks,
-  Info,
-} from "lucide-react";
+
 
 const listingStatus = ["DRAFT", "APPROVED", "REJECTED"] as const;
 
@@ -224,29 +208,32 @@ export default function CreateList() {
                   />
                 </div>
 
-             <div className="bg-muted rounded-sm p-2">
-                 <FormField
-                  control={form.control}
-                  name="amenitiesInput"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amenities</FormLabel>
-                      <Input placeholder="WiFi, Parking, Gym" {...field} />
-                    </FormItem>
-                  )}
-                />
+                <div className="bg-muted rounded-sm p-2">
+                  <FormField
+                    control={form.control}
+                    name="amenitiesInput"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amenities</FormLabel>
+                        <Input placeholder="WiFi, Parking, Gym" {...field} />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="rulesInput"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rules</FormLabel>
-                      <Input placeholder="No smoking, ID required" {...field} />
-                    </FormItem>
-                  )}
-                />
-             </div>
+                  <FormField
+                    control={form.control}
+                    name="rulesInput"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rules</FormLabel>
+                        <Input
+                          placeholder="No smoking, ID required"
+                          {...field}
+                        />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </CardContent>
             </Card>
 
