@@ -53,6 +53,7 @@ import { useAuth } from "@/context/state.context.tsx";
 import SEO from "@/components/seo";
 
 import { useSearchParams } from "react-router";
+import { confirm } from "@/components/alert-box";
 
 export default function OwnerTenant() {
   const { role } = useAuth();

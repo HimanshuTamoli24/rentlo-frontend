@@ -32,23 +32,33 @@ type ConfirmOptions = {
 let openConfirmRef: ((options: ConfirmOptions) => Promise<boolean>) | null =
   null;
 
-export function confirm(options: ConfirmOptions) {
+interface ConfirmFn {
+  (options: ConfirmOptions): Promise<boolean>;
+  create: (opts: Omit<ConfirmOptions, "variant">) => Promise<boolean>;
+  update: (opts: Omit<ConfirmOptions, "variant">) => Promise<boolean>;
+  delete: (opts: Omit<ConfirmOptions, "variant">) => Promise<boolean>;
+  warning: (opts: Omit<ConfirmOptions, "variant">) => Promise<boolean>;
+}
+
+const confirmFn = ((options: ConfirmOptions) => {
   if (!openConfirmRef) {
     throw new Error(
       "ConfirmDialog component not mounted. Please add <ConfirmDialog /> in your App root.",
     );
   }
   return openConfirmRef(options);
-}
+}) as ConfirmFn;
 
-confirm.create = (opts: Omit<ConfirmOptions, "variant">) =>
-  confirm({ ...opts, variant: "create" });
-confirm.update = (opts: Omit<ConfirmOptions, "variant">) =>
-  confirm({ ...opts, variant: "update" });
-confirm.delete = (opts: Omit<ConfirmOptions, "variant">) =>
-  confirm({ ...opts, variant: "delete" });
-confirm.warning = (opts: Omit<ConfirmOptions, "variant">) =>
-  confirm({ ...opts, variant: "warning" });
+confirmFn.create = (opts: Omit<ConfirmOptions, "variant">) =>
+  confirmFn({ ...opts, variant: "create" });
+confirmFn.update = (opts: Omit<ConfirmOptions, "variant">) =>
+  confirmFn({ ...opts, variant: "update" });
+confirmFn.delete = (opts: Omit<ConfirmOptions, "variant">) =>
+  confirmFn({ ...opts, variant: "delete" });
+confirmFn.warning = (opts: Omit<ConfirmOptions, "variant">) =>
+  confirmFn({ ...opts, variant: "warning" });
+
+export const confirm = confirmFn;
 
 const VARIANT_CONFIG: Record<
   ConfirmVariant,

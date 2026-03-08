@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { createAuthApi } from "../services/auth-api";
 import createAxiosInstance from "../../../instance/axios-instance";
-import { confirm } from "@/components/alert-box";
 
 export const useRegister = () => {
   const axiosInstance = createAxiosInstance();
