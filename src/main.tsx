@@ -8,16 +8,20 @@ import { Toaster } from "./components/ui/sonner.tsx";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { StateProvider } from "./context/state.context.tsx";
 
+import { HelmetProvider } from "react-helmet-async";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ReactQueryProvider>
-      <BrowserRouter>
-        <StateProvider>
-          <App />
-        </StateProvider>
-        <Toaster />
-      </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </ReactQueryProvider>
+    <HelmetProvider>
+      <ReactQueryProvider>
+        <BrowserRouter>
+          <StateProvider>
+            <App />
+          </StateProvider>
+          <Toaster />
+        </BrowserRouter>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </ReactQueryProvider>
+    </HelmetProvider>
   </StrictMode>,
 );
