@@ -21,6 +21,7 @@ import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";
+import { faker } from "@faker-js/faker";
 import { useCreateList } from "../hooks/list-hook";
 import MainLayout from "@/components/main-layout";
 import ListCard from "./component/list-card";
@@ -29,6 +30,36 @@ import { confirm } from "@/components/alert-box";
 
 const listingStatus = ["DRAFT", "APPROVED", "REJECTED"] as const;
 
+const indianStates = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+];
 const formSchema = z.object({
   title: z.string().min(3, "Title is required"),
   description: z.string().min(10, "Description must be at least 10 characters"),
@@ -45,6 +76,19 @@ const toStringArray = (value?: string) =>
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+
+const generateFakeData = () => {
+  return {
+    title: faker.helpers.arrayElement(["Luxury", "Cozy", "Spacious", "Modern", "Premium", "Affordable"]) + " " + faker.helpers.arrayElement(["Apartment", "Villa", "Studio", "House", "Penthouse"]) + " in " + faker.location.city(),
+    description: faker.lorem.paragraphs(2),
+    location: faker.helpers.arrayElement(indianStates),
+    rentAmount: faker.number.int({ min: 10000, max: 200000 }),
+    amenitiesInput: faker.helpers.arrayElements(["WiFi", "AC", "Parking", "Gym", "Pool", "Balcony", "Security", "Power Backup", "Clubhouse", "Lift"], { min: 3, max: 6 }).join(", "),
+    rulesInput: faker.helpers.arrayElements(["No smoking", "Families preferred", "ID proof required", "No pets", "Vegetarians only", "Bachelors allowed"], { min: 1, max: 3 }).join(", "),
+    availableFrom: faker.date.soon({ days: 30 }).toISOString().split("T")[0],
+    // status: "APPROVED",
+  };
+};
 
 export default function CreateList() {
   const navigate = useNavigate();
@@ -95,6 +139,40 @@ export default function CreateList() {
       },
       error: "Failed to create listing",
     });
+  };
+
+  const fillFakeData = () => {
+    form.reset(generateFakeData());
+    toast.success("Form filled with fake data!");
+  };
+
+  const seedMultiple = async () => {
+    const ok = await confirm.create({
+      title: "Seed Fake Data",
+      message: "Are you sure you want to instantly create 10 fake listings?",
+      confirmText: "Yes, Seed",
+      cancelText: "Cancel",
+    });
+    if (!ok) return;
+
+    const toastId = toast.loading("Seeding 10 listings...");
+    try {
+      for (let i = 0; i < 10; i++) {
+        const fake = generateFakeData();
+        await createList({
+          title: fake.title,
+          description: fake.description,
+          location: fake.location,
+          rentAmount: Number(fake.rentAmount),
+          amenities: toStringArray(fake.amenitiesInput),
+          rules: toStringArray(fake.rulesInput),
+          availableFrom: new Date(fake.availableFrom).toISOString(),
+        });
+      }
+      toast.success("Successfully seeded 10 fake listings!", { id: toastId });
+    } catch (err) {
+      toast.error("Error while seeding data", { id: toastId });
+    }
   };
 
   return (
@@ -164,17 +242,14 @@ export default function CreateList() {
                             </SelectTrigger>
                           </FormControl>
 
-                          <SelectContent className="max-w-sm truncate">
-                            <SelectItem value="epsteinisland">
-                              Epstein island
-                            </SelectItem>
-                            <SelectItem value="jaipur">Jaipur </SelectItem>
-                            <SelectItem value="patiala">Patiala </SelectItem>
-                            <SelectItem value="chaicode">
-                              Chaicode HeadQuater
-                            </SelectItem>
-                            <SelectItem value="more" className="truncate">
-                              More option buy our 69dollar plan :)
+                          <SelectContent className="max-w-sm  max-h-40  overflow-y-auto truncate">
+                            {indianStates.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value="KIHEAT">
+                              KIHEAT
                             </SelectItem>
                           </SelectContent>
                         </Select>
@@ -246,18 +321,28 @@ export default function CreateList() {
             </Card>
 
             {/* ACTIONS */}
-            <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(-1)}
-              >
-                Cancel
-              </Button>
+            <div className="flex flex-wrap justify-between gap-3">
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={fillFakeData}>
+                  Fill Fake Data
+                </Button>
+                <Button type="button" variant="destructive" onClick={seedMultiple} disabled={isPending}>
+                  Seed 10 Listings
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(-1)}
+                >
+                  Cancel
+                </Button>
 
-              <Button type="submit" disabled={isPending}>
-                {isPending ? "Creating..." : "Create Listing"}
-              </Button>
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? "Creating..." : "Create Listing"}
+                </Button>
+              </div>
             </div>
           </form>
         </FormProvider>

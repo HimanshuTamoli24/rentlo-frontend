@@ -3,6 +3,8 @@ import {
   useIncomingVisits,
   useUpdateVisitStatus,
   useScheduleVisit,
+  useMarkAsVisited,
+  useMakeDecision,
 } from "../../visit/hooks/visit-hook";
 import LoadingPage from "@/components/loading";
 import ErrorPage from "@/components/error-page";
@@ -22,7 +24,6 @@ import {
   Clock,
   MapPin,
   User,
-  MoreVertical,
   CheckCircle2,
   XCircle,
   AlertCircle,
@@ -52,12 +53,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { useAuth } from "@/context/state.context.tsx";
 import SEO from "@/components/seo";
@@ -91,7 +86,10 @@ const getStatusStep = (status: string) => {
 
 export default function OwnerTenant() {
   const { role } = useAuth();
-  const isOwner = role === "OWNER" || role === "BIGBOSS" || role === "ADMIN";
+  const isOwner = useMemo(() => {
+    const r = role?.toUpperCase();
+    return r === "OWNER" || r === "BIGBOSS" || r === "ADMIN";
+  }, [role]);
 
   const {
     data: tenantData,
@@ -107,6 +105,8 @@ export default function OwnerTenant() {
   const { mutateAsync: updateStatus } = useUpdateVisitStatus();
   const { mutateAsync: scheduleVisit, isPending: isScheduling } =
     useScheduleVisit();
+  const { mutateAsync: markVisited } = useMarkAsVisited();
+  const { mutateAsync: makeDecision } = useMakeDecision();
 
   const [detailModal, setDetailModal] = useState<{
     isOpen: boolean;
@@ -170,13 +170,47 @@ export default function OwnerTenant() {
 
   const handleStatusUpdate = async (visitId: string, status: string) => {
     try {
+      const isReject = status === "REJECTED";
       const ok = await confirm.update({
-        message: `Are you sure you want to update the status to ${status}?`,
+        title: isReject ? "Reject Interaction" : "Accept Interaction",
+        message: `Are you sure you want to ${isReject ? "reject" : "accept"} this?`,
+        confirmText: isReject ? "Yes, Reject" : "Yes, Accept",
       });
       if (!ok) return;
 
       await updateStatus({ visitId, status });
       toast.success(`Status updated to ${status}`);
+      if (detailModal.visit?._id === visitId) {
+        setDetailModal({ ...detailModal, isOpen: false });
+      }
+    } catch (err) {}
+  };
+
+  const handleMarkAsVisited = async (visitId: string) => {
+    try {
+      const ok = await confirm.update({
+        title: "Confirm Visit",
+        message: "Did this visit happen? This will move the status to Visited.",
+        confirmText: "Yes, Accept",
+      });
+      if (!ok) return;
+
+      await markVisited(visitId);
+      if (detailModal.visit?._id === visitId) {
+        setDetailModal({ ...detailModal, isOpen: false });
+      }
+    } catch (err) {}
+  };
+
+  const handleDecision = async (visitId: string, decision: "YES" | "NO") => {
+    try {
+      const ok = await confirm.update({
+        message: `Are you sure you want to ${decision === "YES" ? "accept" : "pass on"} this property?`,
+        confirmText: decision === "YES" ? "Accept & Rent" : "No, Pass",
+      });
+      if (!ok) return;
+
+      await makeDecision({ visitId, payload: { decision } });
       if (detailModal.visit?._id === visitId) {
         setDetailModal({ ...detailModal, isOpen: false });
       }
@@ -399,50 +433,6 @@ export default function OwnerTenant() {
                         {status.label}
                       </Badge>
                     </div>
-                    {isOwner && visit.status === "PENDING" && (
-                      <div className="absolute top-4 right-4">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            asChild
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button
-                              variant="secondary"
-                              size="icon"
-                              className="size-8 rounded-full bg-white/90 shadow-sm"
-                            >
-                              <MoreVertical className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="rounded-xl"
-                          >
-                            <DropdownMenuItem
-                              className="font-bold flex items-center gap-2"
-                              onClick={() =>
-                                setScheduleModal({
-                                  isOpen: true,
-                                  visitId: visit._id,
-                                })
-                              }
-                            >
-                              <Clock className="size-4 text-primary" />
-                              Schedule Visit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive font-bold flex items-center gap-2"
-                              onClick={() =>
-                                handleStatusUpdate(visit._id, "REJECTED")
-                              }
-                            >
-                              <XCircle className="size-4" />
-                              Reject Request
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    )}
                   </div>
 
                   <CardHeader className="pb-2">
@@ -483,32 +473,164 @@ export default function OwnerTenant() {
                       </div>
                     </div>
 
+                    {isOwner &&
+                      visit.status === "PENDING" &&
+                      visit.requestedDate && (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-xs font-semibold">
+                          <Clock className="size-3.5" />
+                          Requested: {formatDate(visit.requestedDate)}
+                        </div>
+                      )}
+
                     <div className="border-t pt-2 mt-4">
                       <ProgressSteps currentStatus={visit.status} />
                     </div>
 
-                    {visit.status === "VISITED" && (
+                    {/* Role Specific Actions */}
+                    <div className="flex gap-2 pt-2">
+                      {isOwner ? (
+                        <>
+                          {visit.status === "PENDING" && (
+                            <>
+                              <Button
+                                className="flex-1 rounded-xl font-bold bg-primary shadow-lg shadow-primary/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setScheduleModal({
+                                    isOpen: true,
+                                    visitId: visit._id,
+                                  });
+                                }}
+                              >
+                                Accept Request
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 rounded-xl font-bold text-destructive border-destructive/20 hover:bg-destructive/5"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(visit._id, "REJECTED");
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+
+                          {visit.status === "SCHEDULED" && (
+                            <>
+                              <Button
+                                className="flex-1 rounded-xl font-bold bg-violet-600 hover:bg-violet-700 shadow-lg shadow-violet-500/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMarkAsVisited(visit._id);
+                                }}
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 rounded-xl font-bold text-destructive border-destructive/20 hover:bg-destructive/5"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(visit._id, "REJECTED");
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+
+                          {visit.status === "VISITED" && (
+                            <>
+                              <Button
+                                className="flex-1 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(visit._id, "APPROVED");
+                                }}
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                className="flex-1 rounded-xl font-bold shadow-lg shadow-destructive/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(visit._id, "REJECTED");
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {/* Tenant perspective */}
+                          {visit.status === "SCHEDULED" && (
+                            <>
+                              <Button
+                                className="flex-1 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toast.success(
+                                    "Schedule Accepted! See you there.",
+                                  );
+                                }}
+                              >
+                                Accept
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 rounded-xl font-bold text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusUpdate(visit._id, "REJECTED");
+                                }}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+
+                          {visit.status === "VISITED" && !visit.decision && (
+                            <>
+                              <Button
+                                className="flex-1 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDecision(visit._id, "YES");
+                                }}
+                              >
+                                Wants to Rent
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 rounded-xl font-bold text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDecision(visit._id, "NO");
+                                }}
+                              >
+                                Pass
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {visit.decision && (
                       <div
-                        className="flex gap-2 pt-2"
-                        onClick={(e) => e.stopPropagation()}
+                        className={`p-3 rounded-2xl border text-xs font-bold flex items-center gap-2 ${visit.decision === "YES" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"}`}
                       >
-                        <Button
-                          className="flex-1 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700"
-                          onClick={() =>
-                            handleStatusUpdate(visit._id, "APPROVED")
-                          }
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          className="flex-1 rounded-xl font-bold"
-                          onClick={() =>
-                            handleStatusUpdate(visit._id, "REJECTED")
-                          }
-                        >
-                          Reject
-                        </Button>
+                        {visit.decision === "YES" ? (
+                          <CheckCircle2 className="size-4" />
+                        ) : (
+                          <XCircle className="size-4" />
+                        )}
+                        Tenant Wants to Rent: {visit.decision}
                       </div>
                     )}
                   </CardContent>
@@ -635,41 +757,175 @@ export default function OwnerTenant() {
                     </div>
                   )}
 
-                  {detailModal.visit.status === "VISITED" && (
-                    <div className="flex gap-3 pt-4">
-                      <Button
-                        className="flex-1 rounded-2xl h-12 font-black bg-emerald-600 hover:bg-emerald-700 text-base shadow-lg shadow-emerald-500/20"
-                        onClick={() =>
-                          handleStatusUpdate(detailModal.visit._id, "APPROVED")
-                        }
-                      >
-                        Accept Deal
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="flex-1 rounded-2xl h-12 font-black text-base shadow-lg shadow-destructive/20"
-                        onClick={() =>
-                          handleStatusUpdate(detailModal.visit._id, "REJECTED")
-                        }
-                      >
-                        Reject Request
-                      </Button>
-                    </div>
-                  )}
+                  {/* Role Specific Actions in Modal */}
+                  <div className="pt-4">
+                    {isOwner ? (
+                      <>
+                        {detailModal.visit.status === "PENDING" && (
+                          <div className="flex gap-3">
+                            <Button
+                              className="flex-1 h-12 rounded-2xl font-black bg-primary text-base shadow-lg shadow-primary/20"
+                              onClick={() =>
+                                setScheduleModal({
+                                  isOpen: true,
+                                  visitId: detailModal.visit._id,
+                                })
+                              }
+                            >
+                              Accept & Schedule
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="flex-1 h-12 rounded-2xl font-black text-base border-destructive/20 text-destructive hover:bg-destructive/5"
+                              onClick={() =>
+                                handleStatusUpdate(
+                                  detailModal.visit._id,
+                                  "REJECTED",
+                                )
+                              }
+                            >
+                              Reject Request
+                            </Button>
+                          </div>
+                        )}
 
-                  {isOwner && detailModal.visit?.status === "PENDING" && (
-                    <Button
-                      className="w-full h-12 rounded-2xl font-black bg-primary text-base shadow-lg shadow-primary/20"
-                      onClick={() =>
-                        setScheduleModal({
-                          isOpen: true,
-                          visitId: detailModal.visit._id,
-                        })
-                      }
-                    >
-                      Schedule Visit Now
-                    </Button>
-                  )}
+                        {detailModal.visit.status === "SCHEDULED" && (
+                          <div className="flex gap-3">
+                            <Button
+                              className="flex-1 h-12 rounded-2xl font-black bg-violet-600 hover:bg-violet-700 text-base shadow-lg shadow-violet-500/20"
+                              onClick={() =>
+                                handleMarkAsVisited(detailModal.visit._id)
+                              }
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="flex-1 h-12 rounded-2xl font-black text-base border-destructive/20 text-destructive hover:bg-destructive/5"
+                              onClick={() =>
+                                handleStatusUpdate(
+                                  detailModal.visit._id,
+                                  "REJECTED",
+                                )
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+
+                        {detailModal.visit.status === "VISITED" && (
+                          <div className="space-y-4">
+                            {detailModal.visit.decision && (
+                              <div
+                                className={`p-4 rounded-3xl border text-sm font-bold flex flex-col gap-1 ${detailModal.visit.decision === "YES" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"}`}
+                              >
+                                <span className="text-[10px] uppercase opacity-60">
+                                  Tenant Decision
+                                </span>
+                                <span className="text-base">
+                                  {detailModal.visit.decision === "YES"
+                                    ? "Wants to Rent! 🎉"
+                                    : "Decided to Pass"}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex gap-3">
+                              <Button
+                                className="flex-1 h-12 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 text-base shadow-lg shadow-emerald-500/20"
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    detailModal.visit._id,
+                                    "APPROVED",
+                                  )
+                                }
+                              >
+                                Accept Deal
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                className="flex-1 h-12 rounded-2xl font-black text-base shadow-lg shadow-destructive/20"
+                                onClick={() =>
+                                  handleStatusUpdate(
+                                    detailModal.visit._id,
+                                    "REJECTED",
+                                  )
+                                }
+                              >
+                                Reject Deal
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {/* Tenant Modal Actions */}
+                        {detailModal.visit.status === "SCHEDULED" && (
+                          <div className="flex gap-3">
+                            <Button
+                              className="flex-1 h-12 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 text-base"
+                              onClick={() => {
+                                toast.success("Schedule Accepted!");
+                                setDetailModal({
+                                  ...detailModal,
+                                  isOpen: false,
+                                });
+                              }}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="flex-1 h-12 rounded-2xl font-black text-base text-destructive"
+                              onClick={() =>
+                                handleStatusUpdate(
+                                  detailModal.visit._id,
+                                  "REJECTED",
+                                )
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+
+                        {detailModal.visit.status === "VISITED" &&
+                          !detailModal.visit.decision && (
+                            <div className="flex gap-3">
+                              <Button
+                                className="flex-1 h-12 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 text-base shadow-lg"
+                                onClick={() =>
+                                  handleDecision(detailModal.visit._id, "YES")
+                                }
+                              >
+                                Wants to Rent
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 h-12 rounded-2xl font-black text-base text-destructive"
+                                onClick={() =>
+                                  handleDecision(detailModal.visit._id, "NO")
+                                }
+                              >
+                                Pass
+                              </Button>
+                            </div>
+                          )}
+
+                        {detailModal.visit.decision && (
+                          <div
+                            className={`p-4 rounded-3xl border text-sm font-bold text-center ${detailModal.visit.decision === "YES" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-rose-50 border-rose-200 text-rose-700"}`}
+                          >
+                            Your Decision:{" "}
+                            {detailModal.visit.decision === "YES"
+                              ? "Wants to Rent"
+                              : "Passed"}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <Button

@@ -9,6 +9,12 @@ import {
 import { Outlet, Route, Routes } from "react-router";
 import ListPage from "./module/list/pages/list";
 import NotFoundPage from "./components/not-found";
+import CategoryPage from "./module/list/pages/component/category-page";
+import NewHousePage from "./module/list/pages/new-house";
+import ApartmentPage from "./module/list/pages/apartment";
+import ConstructionPage from "./module/list/pages/construction";
+import MyHousePage from "./module/list/pages/my-house";
+import ServicesPage from "./module/list/pages/services";
 import ProtectedRoutes from "./components/protected-routes";
 
 import UserRoutes from "./module/user";
@@ -39,6 +45,12 @@ function App() {
       {/* Public Routes */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/" element={<ListPage />} />
+      <Route path="/categories" element={<CategoryPage />} />
+      <Route path="/new-house" element={<NewHousePage />} />
+      <Route path="/apartment" element={<ApartmentPage />} />
+      <Route path="/construction" element={<ConstructionPage />} />
+      <Route path="/my-house" element={<MyHousePage />} />
+      <Route path="/services" element={<ServicesPage />} />
       <Route path="/property/:id" element={<ListDetailPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
 

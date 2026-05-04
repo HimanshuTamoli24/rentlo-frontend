@@ -12,7 +12,8 @@ export default function HeadNavbar() {
         <a href="#" className="text-gray-600 hover:text-gray-800">
           Contact
         </a>
+        <a href="/categories" className="text-gray-600 hover:text-gray-800">Categories</a>
       </div>
     </nav>
-  );
+  )
 }

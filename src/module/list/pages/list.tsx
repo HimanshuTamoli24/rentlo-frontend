@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useLists } from "../hooks/list-hook";
 import ListCard, { type ListingCardData } from "./component/list-card";
 import TopNav from "./component/top-nav";
@@ -20,7 +21,36 @@ import { useSearchParams } from "react-router";
 import MainLayout from "@/components/main-layout";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/footer";
-
+const indianStates = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal"
+];
 export default function ListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("search") || "";
@@ -28,14 +58,18 @@ export default function ListPage() {
   const moveIn = searchParams.get("moveIn") || "1day";
   const location = searchParams.get("location") || undefined;
   const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 20;
 
-  const { data, isLoading, isError } = useLists({
+  const queryParams = useMemo(() => ({
     search,
     rentAmount,
     moveIn,
     location,
     page,
-  });
+    limit,
+  }), [search, rentAmount, moveIn, location, page, limit]);
+
+  const { data, isLoading, isError } = useLists(queryParams);
 
   const lists: ListingCardData[] = data?.data || [];
 
@@ -52,7 +86,7 @@ export default function ListPage() {
     })),
   };
 
-  const totalPages = data?.totalPages || 1;
+  const totalPages = data?.meta?.totalPages || 1;
 
   const updateParam = (key: string, value: string | undefined) => {
     const params = new URLSearchParams(searchParams);
@@ -86,6 +120,12 @@ export default function ListPage() {
             onPageChange={(p) => {
               const params = new URLSearchParams(searchParams);
               params.set("page", p.toString());
+              setSearchParams(params);
+            }}
+            onLimitChange={(l) => {
+              const params = new URLSearchParams(searchParams);
+              params.set("limit", l.toString());
+              params.set("page", "1");
               setSearchParams(params);
             }}
           />
@@ -155,12 +195,11 @@ export default function ListPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Locations</SelectItem>
-                        <SelectItem value="epsteinisland">
-                          Epstein Island
-                        </SelectItem>
-                        <SelectItem value="jaipur">Jaipur</SelectItem>
-                        <SelectItem value="patiala">Patiala</SelectItem>
-                        <SelectItem value="chaicode">Chaicode HQ</SelectItem>
+                        {indianStates.map((state) => (
+                          <SelectItem key={state} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

@@ -231,12 +231,14 @@ function MainLayoutPagination({
   isFetching = false,
   isLimit = true,
   onPageChange,
+  onLimitChange,
 }: {
   currentPage?: number;
   totalPages?: number;
   isFetching?: boolean;
   isLimit?: boolean;
   onPageChange?: (page: number) => void;
+  onLimitChange?: (limit: number) => void;
 }) {
   const { searchParams, setSearchParams } = useMainLayout();
   const page = currentPage || 1;
@@ -258,15 +260,19 @@ function MainLayoutPagination({
   }
 
   function handleLimitChange(value: string) {
-    updateSearchParams(
-      searchParams,
-      setSearchParams,
-      (params) => {
-        params.set("limit", value);
-        params.set("page", "1");
-      },
-      false,
-    );
+    if (onLimitChange) {
+      onLimitChange(parseInt(value, 10));
+    } else {
+      updateSearchParams(
+        searchParams,
+        setSearchParams,
+        (params) => {
+          params.set("limit", value);
+          params.set("page", "1");
+        },
+        false,
+      );
+    }
   }
 
   return (

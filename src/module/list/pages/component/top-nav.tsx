@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router";
+import { useNavigate, Link, useLocation } from "react-router";
 import { useAuth } from "@/context/state.context.tsx";
 import { Facehash } from "facehash";
 import {
@@ -18,6 +18,16 @@ import { useState } from "react";
 
 export default function TopNav() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path;
+    return `flex items-center text-sm font-medium transition-colors hover:text-foreground ${
+      isActive
+        ? "text-blue-700 bg-blue-800/10 p-1 rounded-lg"
+        : "text-muted-foreground"
+    }`;
+  };
   const { isAuth, user } = useAuth();
   const { mutateAsync: logoutUser } = useLogout();
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -45,37 +55,29 @@ export default function TopNav() {
             </span>
           </a>
           <nav className="hidden gap-6 md:flex">
-            <a
-              href="#"
-              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
+            <Link to="/" className={getLinkClass("/")}>
+              Home
+            </Link>
+            <Link to="/new-house" className={getLinkClass("/new-house")}>
               New house
-            </a>
-            <a
-              href="#"
-              className="flex items-center text-sm font-semibold text-foreground transition-colors hover:text-foreground"
-            >
-              <span className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
+            </Link>
+            <Link to="/apartment" className={getLinkClass("/apartment")}>
+              {pathname === "/apartment" ? (
+                 <span className="mr-2 h-1.5 w-1.5 rounded-full bg-blue-700" />
+              ) : (
+                 <span className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
               Apartment
-            </a>
-            <a
-              href="#"
-              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
+            </Link>
+            <Link to="/construction" className={getLinkClass("/construction")}>
               Construction
-            </a>
-            <a
-              href="#"
-              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
+            </Link>
+            <Link to="/my-house" className={getLinkClass("/my-house")}>
               My house
-            </a>
-            <a
-              href="#"
-              className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
+            </Link>
+            <Link to="/services" className={getLinkClass("/services")}>
               Services
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-4">
